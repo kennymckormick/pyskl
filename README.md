@@ -1,5 +1,7 @@
 # PYSKL
 
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/pyskl-a-toolbox-for-skeleton-based-video/skeleton-based-action-recognition-on-ntu-rgbd)](https://paperswithcode.com/sota/skeleton-based-action-recognition-on-ntu-rgbd?p=pyskl-a-toolbox-for-skeleton-based-video) [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/pyskl-a-toolbox-for-skeleton-based-video/skeleton-based-action-recognition-on-ntu-rgbd-1)](https://paperswithcode.com/sota/skeleton-based-action-recognition-on-ntu-rgbd-1?p=pyskl-a-toolbox-for-skeleton-based-video)
+
 PYSKL is a toolbox focusing on action recognition based on **SK**e**L**eton data with **PY**Torch. Various algorithms will be supported for skeleton-based action recognition. We build this project based on the OpenSource Project [MMAction2](https://github.com/open-mmlab/mmaction2).
 
 This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2104.13586) and [STGCN++]().
