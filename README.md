@@ -6,7 +6,7 @@ PYSKL is a toolbox focusing on action recognition based on **SK**e**L**eton data
 
 This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2104.13586) and [STGCN++]().
 
-div align="center">
+<div align="center">
   <img src="https://user-images.githubusercontent.com/34324155/123989146-2ecae680-d9fb-11eb-916b-b9db5563a9e5.gif" width="500px"><br>
   <p style="font-size:1.5vw;">Skeleton-base Action Recognition Results on NTU-RGB+D-120</p>
 </div>
