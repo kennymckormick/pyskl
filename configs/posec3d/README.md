@@ -14,7 +14,7 @@ PoseC3D is the first framework that formats 2D human skeletons as 3D voxels and 
 ```BibTeX
 @article{duan2021revisiting,
   title={Revisiting skeleton-based action recognition},
-  author={Duan, Haodong and Zhao, Yue and Chen, Kai and Shao, Dian and Lin, Dahua and Dai, Bo},
+  author={Duan, Haodong and Zhao, Yue and Chen, Kai and Lin, Dahua and Dai, Bo},
   journal={arXiv preprint arXiv:2104.13586},
   year={2021}
 }
