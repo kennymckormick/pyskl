@@ -17,6 +17,7 @@ from functools import reduce
 from multiprocessing import Pool, current_process
 
 import cv2
+import decord
 import mmcv
 import numpy as np
 import requests
