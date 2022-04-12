@@ -52,3 +52,6 @@ If you use PYSKL in your research or wish to refer to the baseline results publi
     year={2022}
 }
 ```
+
+## Contact
+For any questions, feel free to contact: dh019@ie.cuhk.edu.hk
