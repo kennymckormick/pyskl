@@ -83,9 +83,9 @@ def parse_args():
     parser.add_argument('--pose-config', type=str, default=default_pose_config)
     parser.add_argument('--pose-ckpt', type=str, default=default_pose_ckpt)
     # * Only det boxes with score larger than det_score_thr will be kept
-    parser.add_argument('--det-score-thr', type=float, default=0.5)
+    parser.add_argument('--det-score-thr', type=float, default=0.7)
     # * Only det boxes with large enough sizes will be kept,
-    parser.add_argument('--det-area-thr', type=float, default=2500)
+    parser.add_argument('--det-area-thr', type=float, default=1600)
     # * Accepted formats for each line in video_list are:
     # * 1. "xxx.mp4" ('label' is missing, the dataset can be used for inference, but not training)
     # * 2. "xxx.mp4 label" ('label' is an integer (category index),
