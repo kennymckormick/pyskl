@@ -84,6 +84,8 @@ def parse_args():
     parser.add_argument('--pose-ckpt', type=str, default=default_pose_ckpt)
     # * Only det boxes with score larger than det_score_thr will be kept
     parser.add_argument('--det-score-thr', type=float, default=0.5)
+    # * Only det boxes with large enough sizes will be kept,
+    parser.add_argument('--det-area-thr', type=float, default=2500)
     # * Accepted formats for each line in video_list are:
     # * 1. "xxx.mp4" ('label' is missing, the dataset can be used for inference, but not training)
     # * 2. "xxx.mp4 label" ('label' is an integer (category index),
@@ -130,7 +132,17 @@ def main():
     for anno in tqdm(my_part):
         frames = extract_frame(anno['filename'])
         det_results = detection_inference(det_model, frames)
-        det_results = [x[0][x[0][:, 4] >= args.det_score_thr] for x in det_results]
+        # * Get detection results for human
+        det_results = [x[0] for x in det_results]
+        for i, res in enumerate(det_results):
+            # * filter boxes with small scores
+            res = res[res[:, 4] >= args.det_score_thr]
+            # * filter boxes with small areas
+            box_areas = (res[:, 3] - res[:, 1]) * (res[:, 2] - res[:, 0])
+            assert np.all(box_areas >= 0)
+            res = res[box_areas >= args.det_area_thr]
+            det_results[i] = res
+
         pose_results = pose_inference(pose_model, frames, det_results)
         shape = frames[0].shape[:2]
         anno['img_shape'] = anno['original_shape'] = shape
@@ -145,6 +157,10 @@ def main():
 
     if rank == 0:
         parts = [mmcv.load(osp.join(args.tmpdir, f'part_{i}.pkl')) for i in range(world_size)]
+        rem = len(annos) % world_size
+        if rem:
+            for i in range(rem, world_size):
+                parts[i].append(None)
 
         ordered_results = []
         for res in zip(*parts):
