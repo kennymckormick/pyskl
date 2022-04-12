@@ -94,7 +94,7 @@ def parse_args():
     parser.add_argument('--video-list', type=str, help='the list of source videos')
     # * out should ends with '.pkl'
     parser.add_argument('--out', type=str, help='output pickle name')
-    parser.add_argument('--tmpdir', type=str, help='tmp')
+    parser.add_argument('--tmpdir', type=str, default='tmp')
     parser.add_argument('--local_rank', type=int, default=0)
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
@@ -117,7 +117,7 @@ def main():
     else:
         annos = [dict(frame_dir=osp.basename(x[0]).split('.')[0], filename=x[0], label=int(x[1])) for x in lines]
 
-    init_dist('pytorch', dict(backend='nccl'))
+    init_dist('pytorch', backend='nccl')
     rank, world_size = get_dist_info()
 
     if rank == 0:
@@ -125,9 +125,9 @@ def main():
     dist.barrier()
     my_part = annos[rank::world_size]
 
-    det_model = init_detector(args.det_config, args.det_checkpoint, 'cuda')
+    det_model = init_detector(args.det_config, args.det_ckpt, 'cuda')
     assert det_model.CLASSES[0] == 'person', 'A detector trained on COCO is required'
-    pose_model = init_pose_model(args.pose_config, args.pose_checkpoint, 'cuda')
+    pose_model = init_pose_model(args.pose_config, args.pose_ckpt, 'cuda')
 
     for anno in tqdm(my_part):
         frames = extract_frame(anno['filename'])
