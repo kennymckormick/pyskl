@@ -148,8 +148,8 @@ def main():
         anno['img_shape'] = anno['original_shape'] = shape
         anno['total_frames'] = len(frames)
         anno['num_person_raw'] = pose_results.shape[0]
-        anno['keypoint'] = pose_results[..., :2]
-        anno['keypoint_score'] = pose_results[..., 2]
+        anno['keypoint'] = pose_results[..., :2].astype(np.float16)
+        anno['keypoint_score'] = pose_results[..., 2].astype(np.float16)
         anno.pop('filename')
 
     mmcv.dump(my_part, osp.join(args.tmpdir, f'part_{rank}.pkl'))
