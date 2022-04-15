@@ -11,6 +11,10 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
   <p style="font-size:1.5vw;">Skeleton-base Action Recognition Results on NTU-RGB+D-120</p>
 </div>
 
+## News
+
+- We provide an example for processing a custom video dataset (we use diving48), generating 2D skeleton annotations, and using PoseC3D for skeleton-based action recognition. The tutorial for skeleton extraction part is available in [diving48_example](/examples/extract_diving48_skeleton/diving48_example.ipynb).  <**2022-04-15**>
+
 ## Supported Algorithms
 
 - [x] ST-GCN (AAAI 2018): https://arxiv.org/abs/1801.07455 [[MODELZOO](/configs/stgcn/README.md)]
@@ -26,7 +30,7 @@ pip install -e .
 ```
 
 ## Data Preparation
-For data pre-processing, we estimate 2D skeletons with a two-stage pose estimator (Faster-RCNN + HRNet). For 3D skeletons, we follow the pre-processing procedure of [CTR-GCN](https://github.com/Uason-Chen/CTR-GCN). Currently, we do not provide the pre-processing scripts. Instead, we directly provide the [processed skeleton data](/tools/data_list.md) as pickle files, which can be directly used in training and evaluation.  You can use [vis_skeleton](/demo/vis_skeleton.ipynb) to visualize the provided skeleton data.
+For data pre-processing, we estimate 2D skeletons with a two-stage pose estimator (Faster-RCNN + HRNet). For 3D skeletons, we follow the pre-processing procedure of [CTR-GCN](https://github.com/Uason-Chen/CTR-GCN). Currently, we do not provide the pre-processing scripts. Instead, we directly provide the [processed skeleton data](/tools/data/data_list.md) as pickle files, which can be directly used in training and evaluation.  You can use [vis_skeleton](/demo/vis_skeleton.ipynb) to visualize the provided skeleton data.
 
 
 ## Training & Testing

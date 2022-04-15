@@ -91,13 +91,6 @@ ENV/
 env.bak/
 venv.bak/
 
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
 # mkdocs documentation
 /site
 
@@ -123,19 +116,17 @@ work_dirs/
 # lmdb
 *.mdb
 
-# unignore some data file in tests/data
-!tests/data/**/*.pkl
-!tests/data/**/*.pkl.json
-!tests/data/**/*.log.json
-!tests/data/**/*.pth
-
 # avoid soft links created by MIM
 pyskl/configs/*
 pyskl/tools/*
-*.ipynb
 
 # unignore ipython notebook files in demo
 !demo/*.ipynb
 pyskl/.mim
 .VScodeCounter
 tmp/*
+
+examples/extract_diving48_skeleton/*json
+examples/extract_diving48_skeleton/*list
+examples/extract_diving48_skeleton/*pkl
+configs/gen_config.ipynb
