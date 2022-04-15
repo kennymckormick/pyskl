@@ -37,8 +37,7 @@ We release numerous weights trained on various datasets and with multiple 3D bac
 | FineGYM¹ | X3D-shallow | HRNet 2D Pose | None | 240 | 8 | [joint_config](/configs/posec3d/x3d_shallow_gym/joint.py): [91.4](http://download.openmmlab.com/mmaction/pyskl/ckpt/posec3d/x3d_shallow_gym/joint.pth) | [limb_config](/configs/posec3d/x3d_shallow_gym/limb.py): [90.0](http://download.openmmlab.com/mmaction/pyskl/ckpt/posec3d/x3d_shallow_gym/limb.pth) | 91.8 |
 | UCF101² | SlowOnly-R50 | HRNet 2D Pose | Kinetics-400 | 120 | 8 | [joint_config](/configs/posec3d/slowonly_r50_ucf101_k400p/s1_joint.py): [86.9](http://download.openmmlab.com/mmaction/pyskl/ckpt/posec3d/slowonly_r50_ucf101_k400p/s1_joint.pth) |  |  |
 | HMDB51² | SlowOnly-R50 | HRNet 2D Pose | Kinetics-400 | 120 | 8 | [joint_config](/configs/posec3d/slowonly_r50_hmdb51_k400p/s1_joint.py): [69.4](http://download.openmmlab.com/mmaction/pyskl/ckpt/posec3d/slowonly_r50_hmdb51_k400p/s1_joint.pth) |  |  |
-| Diving48 | SlowOnly-R50 | HRNet 2D Pose | None | 240 | 8 | [joint_config](/configs/posec3d/slowonly_r50_diving48/joint.py) | | |
-| Diving48 | SlowOnly-R50 | HRNet 2D Pose | Kinetics-400 | 120 | 8 | [joint_config](/configs/posec3d/slowonly_r50_diving48/joint_finetune.py) | | |
+| Diving48 | SlowOnly-R50 | HRNet 2D Pose | None | 240 | 8 | [joint_config](/configs/posec3d/slowonly_r50_diving48/joint.py): [54.5](http://download.openmmlab.com/mmaction/pyskl/ckpt/posec3d/slowonly_r50_diving48/joint.pth) | | |
 
 **Note**
 

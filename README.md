@@ -11,6 +11,10 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
   <p style="font-size:1.5vw;">Skeleton-base Action Recognition Results on NTU-RGB+D-120</p>
 </div>
 
+## News
+
+- We provide an example for processing a custom video dataset (we use diving48), generating 2D skeleton annotations, and using PoseC3D for skeleton-based action recognition. The tutorial for skeleton extraction part is available in [diving48_example](/examples/extract_diving48_skeleton/diving48_example.ipynb).  <**2022-04-15**>
+
 ## Supported Algorithms
 
 - [x] ST-GCN (AAAI 2018): https://arxiv.org/abs/1801.07455 [[MODELZOO](/configs/stgcn/README.md)]

@@ -9,6 +9,7 @@ We provide links to the pre-processed skeleton annotations, you can directly dow
 - GYM [2D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/gym/gym_hrnet.pkl
 - UCF101 [2D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/ucf101/ucf101_hrnet.pkl
 - HMDB51 [2D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/hmdb51/hmdb51_hrnet.pkl
+- Diving48 [2D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/diving48/diving48_hrnet.pkl
 
 Here are the BibTex items for each dataset:
 
@@ -55,5 +56,13 @@ Here are the BibTex items for each dataset:
   pages={2556--2563},
   year={2011},
   organization={IEEE}
+}
+% Diving48
+@inproceedings{li2018resound,
+  title={Resound: Towards action recognition without representation bias},
+  author={Li, Yingwei and Li, Yi and Vasconcelos, Nuno},
+  booktitle={Proceedings of the European Conference on Computer Vision (ECCV)},
+  pages={513--528},
+  year={2018}
 }
 ```
