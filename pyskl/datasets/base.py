@@ -30,28 +30,16 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         ann_file (str): Path to the annotation file.
         pipeline (list[dict | callable]): A sequence of data transforms.
         data_prefix (str): Path to a directory where videos are held. Default: ''.
-        test_mode (bool): Store True when building test or validation dataset.
-            Default: False.
-        multi_class (bool): Determines whether the dataset is a multi-class
-            dataset. Default: False.
-        num_classes (int | None): Number of classes of the dataset, used in
-            multi-class datasets. Default: None.
-        start_index (int): Specify a start index for frames in consideration of
-            different filename format. However, when taking videos as input,
-            it should be set to 0, since frames loaded from videos count
-            from 0. Default: 1.
-        modality (str): Modality of data. Support 'RGB', 'Flow', 'Audio'.
-            Default: 'RGB'.
-        sample_by_class (bool): Sampling by class, should be set `True` when
-            performing inter-class data balancing. Only compatible with
-            `multi_class == False`. Only applies for training. Default: False.
-        power (float): We support sampling data with the probability
-            proportional to the power of its label frequency (freq ^ power)
-            when sampling data. `power == 1` indicates uniformly sampling all
-            data; `power == 0` indicates uniformly sampling all classes.
-            Default: 0.
-        dynamic_length (bool): If the dataset length is dynamic (used by
-            ClassSpecificDistributedSampler). Default: False.
+        test_mode (bool): Store True when building test or validation dataset. Default: False.
+        multi_class (bool): Determines whether the dataset is a multi-class dataset. Default: False.
+        num_classes (int | None): Number of classes of the dataset, used in multi-class datasets. Default: None.
+        start_index (int): Specify a start index for frames in consideration of different filename format. However,
+            if taking videos as input, it should be set to 0, since frames loaded from videos count from 0. Default: 1.
+        modality (str): Modality of data. Support 'RGB', 'Flow', 'Audio'. Default: 'RGB'.
+        memcached (bool): Whether keypoint is cached in memcached. If set as True, will use 'frame_dir' as the key to
+            fetch 'keypoint' from memcached. Default: False.
+        mc_cfg (tuple): The config for memcached client, only applicable if `memcached==True`.
+            Default: ('localhost', 11211).
     """
 
     def __init__(self,
@@ -64,10 +52,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
                  start_index=1,
                  modality='RGB',
                  memcached=False,
-                 mc_cfg=('localhost', 11211),
-                 sample_by_class=False,
-                 power=0,
-                 dynamic_length=False):
+                 mc_cfg=('localhost', 11211)):
         super().__init__()
 
         self.ann_file = ann_file
@@ -77,34 +62,16 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         self.num_classes = num_classes
         self.start_index = start_index
         self.modality = modality
-        self.sample_by_class = sample_by_class
-        self.power = power
-        self.dynamic_length = dynamic_length
         # Note: Currently, memcached only works for PoseDataset
         self.memcached = memcached
         self.mc_cfg = mc_cfg
         self.cli = None
-
-        assert not (self.multi_class and self.sample_by_class)
 
         self.pipeline = Compose(pipeline)
         self.video_infos = self.load_annotations()
         if self.memcached:
             for item in self.video_infos:
                 assert 'key' in item and isinstance(item['key'], str)
-
-        if self.sample_by_class:
-            self.video_infos_by_class = self.parse_by_class()
-
-            class_prob = []
-            for _, samples in self.video_infos_by_class.items():
-                class_prob.append(len(samples) / len(self.video_infos))
-            class_prob = [x**self.power for x in class_prob]
-
-            summ = sum(class_prob)
-            class_prob = [x / summ for x in class_prob]
-
-            self.class_prob = dict(zip(self.video_infos_by_class, class_prob))
 
     @abstractmethod
     def load_annotations(self):

@@ -361,8 +361,8 @@ class DecompressPose:
 
     In compressed pose annotations, each item contains the following keys:
     Original keys: 'label', 'frame_dir', 'img_shape', 'original_shape', 'total_frames'
-    New keys: 'frame_inds', 'keypoint'.
-    This operation: 'frame_inds', 'keypoint', 'total_frames'
+    New keys: 'frame_inds', 'keypoint', 'anno_inds'.
+    This operation: 'frame_inds', 'keypoint', 'total_frames', 'anno_inds'
          -> 'keypoint', 'keypoint_score', 'total_frames'
 
     Args:
@@ -380,14 +380,18 @@ class DecompressPose:
 
     def __call__(self, results):
 
-        required_keys = ['total_frames', 'frame_inds', 'bbox_score', 'keypoint']
+        required_keys = ['total_frames', 'frame_inds', 'keypoint']
         for k in required_keys:
             assert k in results
 
         total_frames = results['total_frames']
         frame_inds = results.pop('frame_inds')
+        keypoint = results['keypoint']
 
-        frame_inds = list(frame_inds)
+        if 'anno_inds' in results:
+            frame_inds = frame_inds[results['anno_inds']]
+            keypoint = keypoint[results['anno_inds']]
+
         assert np.all(np.diff(frame_inds) >= 0), 'frame_inds should be monotonical increasing'
 
         def mapinds(inds):
@@ -401,8 +405,6 @@ class DecompressPose:
             total_frames = np.max(frame_inds) + 1
 
         results['total_frames'] = total_frames
-
-        keypoint = results['keypoint']
 
         num_joints = keypoint.shape[1]
         num_person = get_mode(frame_inds)[-1][0]
