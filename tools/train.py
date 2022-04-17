@@ -16,7 +16,7 @@ from pyskl import __version__
 from pyskl.apis import init_random_seed, train_model
 from pyskl.datasets import build_dataset
 from pyskl.models import build_model
-from pyskl.utils import collect_env, get_root_logger, mc_off, mc_on, test_port
+from pyskl.utils import collect_env, get_root_logger, mc_off, mc_on, mp_cache, test_port
 
 
 def parse_args():
@@ -127,7 +127,7 @@ def main():
 
     test_option = dict(test_last=args.test_last, test_best=args.test_best)
 
-    so_keys, cli = set(), None
+    cli = None
     default_mc_cfg = ('localhost', 22077)
 
     if rank == 0:
@@ -145,34 +145,14 @@ def main():
                 retry -= 1
             assert retry >= 0, 'Failed to launch memcached. '
             assert isinstance(mc_list, list)
-            from pymemcache.client.base import Client
-            from pymemcache import serde
+            mp_cache(mc_cfg, mc_list)
 
-            cli = Client(mc_cfg, serde=serde.pickle_serde)
-
-            for data_file in mc_list:
-                assert osp.exists(data_file)
-                kv_dict = load(data_file)
-                if isinstance(kv_dict, list):
-                    assert ('frame_dir' in kv_dict[0]) != ('filename' in kv_dict[0])
-                    key = 'frame_dir' if 'frame_dir' in kv_dict[0] else 'filename'
-                    kv_dict = {x[key]: x for x in kv_dict}
-                for k, v in kv_dict.items():
-                    assert k not in so_keys, 'No duplicate keys allowed in mc_list! '
-                    try:
-                        cli.set(k, v)
-                    except:
-                        cli = Client(mc_cfg, serde=serde.pickle_serde)
-                        cli.set(k, v)
-                    so_keys.add(k)
     dist.barrier()
 
     train_model(model, datasets, cfg, validate=args.validate, test=test_option, timestamp=timestamp, meta=meta)
     dist.barrier()
 
     if rank == 0 and cli is not None:
-        for k in so_keys:
-            cli.delete(k)
         mc_off()
 
 
