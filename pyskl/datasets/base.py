@@ -230,6 +230,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
                 from pymemcache import serde
                 self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
                 pack = self.cli.get(key)
+            assert isinstance(pack, dict), f'Missing Key: {key}'
             for k in pack:
                 results[k] = pack[k]
 
