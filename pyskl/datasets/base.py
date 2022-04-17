@@ -39,7 +39,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         memcached (bool): Whether keypoint is cached in memcached. If set as True, will use 'frame_dir' as the key to
             fetch 'keypoint' from memcached. Default: False.
         mc_cfg (tuple): The config for memcached client, only applicable if `memcached==True`.
-            Default: ('localhost', 11211).
+            Default: ('localhost', 22077).
     """
 
     def __init__(self,
@@ -52,7 +52,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
                  start_index=1,
                  modality='RGB',
                  memcached=False,
-                 mc_cfg=('localhost', 11211)):
+                 mc_cfg=('localhost', 22077)):
         super().__init__()
 
         self.ann_file = ann_file

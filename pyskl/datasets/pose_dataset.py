@@ -38,7 +38,7 @@ class PoseDataset(BaseDataset):
         memcached (bool): Whether keypoint is cached in memcached. If set as True, will use 'frame_dir' as the key to
             fetch 'keypoint' from memcached. Default: False.
         mc_cfg (tuple): The config for memcached client, only applicable if `memcached==True`.
-            Default: ('localhost', 11211).
+            Default: ('localhost', 22077).
         **kwargs: Keyword arguments for 'BaseDataset'.
     """
 
@@ -50,7 +50,7 @@ class PoseDataset(BaseDataset):
                  box_thr=0.5,
                  class_prob=None,
                  memcached=False,
-                 mc_cfg=('localhost', 11211),
+                 mc_cfg=('localhost', 22077),
                  **kwargs):
         modality = 'Pose'
         self.split = split
@@ -95,7 +95,8 @@ class PoseDataset(BaseDataset):
         if self.split:
             split, data = data['split'], data['annotations']
             identifier = 'filename' if 'filename' in data[0] else 'frame_dir'
-            data = [x for x in data if x[identifier] in split[self.split]]
+            split = set(split[self.split])
+            data = [x for x in data if x[identifier] in split]
 
         for item in data:
             # Sometimes we may need to load anno from the file

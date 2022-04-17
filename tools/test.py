@@ -137,7 +137,7 @@ def main():
     data_loader = build_dataloader(dataset, **dataloader_setting)
 
     so_keys, cli = set(), None
-    default_mc_cfg = ('localhost', 11211)
+    default_mc_cfg = ('localhost', 22077)
 
     if rank == 0:
         # mc_list is a list of pickle files you want to cache in memory.

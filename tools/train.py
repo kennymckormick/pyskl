@@ -127,7 +127,7 @@ def main():
     test_option = dict(test_last=args.test_last, test_best=args.test_best)
 
     so_keys, cli = set(), None
-    default_mc_cfg = ('localhost', 11211)
+    default_mc_cfg = ('localhost', 22077)
 
     if rank == 0:
         # mc_list is a list of pickle files you want to cache in memory.
