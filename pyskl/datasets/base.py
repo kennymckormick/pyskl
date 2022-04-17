@@ -69,9 +69,6 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
 
         self.pipeline = Compose(pipeline)
         self.video_infos = self.load_annotations()
-        if self.memcached:
-            for item in self.video_infos:
-                assert 'key' in item and isinstance(item['key'], str)
 
     @abstractmethod
     def load_annotations(self):
