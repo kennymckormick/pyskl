@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+# flake8: noqa: E722
 import argparse
 import os
 import os.path as osp
@@ -145,12 +146,9 @@ def main():
             assert retry >= 0, 'Failed to launch memcached. '
             assert isinstance(mc_list, list)
             from pymemcache.client.base import Client
-            from pymemcache.client.retrying import RetryingClient
             from pymemcache import serde
-            from pymemcache.exceptions import MemcacheUnexpectedCloseError
 
-            base_cli = Client(mc_cfg, serde=serde.pickle_serde)
-            cli = RetryingClient(base_cli, attempts=3, retry_delay=0.1, retry_for=[MemcacheUnexpectedCloseError])
+            cli = Client(mc_cfg, serde=serde.pickle_serde)
 
             for data_file in mc_list:
                 assert osp.exists(data_file)
@@ -161,7 +159,11 @@ def main():
                     kv_dict = {x[key]: x for x in kv_dict}
                 for k, v in kv_dict.items():
                     assert k not in so_keys, 'No duplicate keys allowed in mc_list! '
-                    cli.set(k, v)
+                    try:
+                        cli.set(k, v)
+                    except:
+                        cli = Client(mc_cfg, serde=serde.pickle_serde)
+                        cli.set(k, v)
                     so_keys.add(k)
     dist.barrier()
 

@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+# flake8: noqa: E722
 import copy
 import os.path as osp
 import warnings
@@ -222,7 +223,13 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
                 from pymemcache import serde
                 self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
             key = results.pop('key')
-            pack = self.cli.get(key)
+            try:
+                pack = self.cli.get(key)
+            except:
+                from pymemcache.client.base import Client
+                from pymemcache import serde
+                self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
+                pack = self.cli.get(key)
             for k in pack:
                 results[k] = pack[k]
 
@@ -247,7 +254,13 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
                 from pymemcache import serde
                 self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
             key = results.pop('key')
-            pack = self.cli.get(key)
+            try:
+                pack = self.cli.get(key)
+            except:
+                from pymemcache.client.base import Client
+                from pymemcache import serde
+                self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
+                pack = self.cli.get(key)
             for k in pack:
                 results[k] = pack[k]
 
