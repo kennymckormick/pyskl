@@ -218,19 +218,27 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         """Prepare the frames for training given the index."""
         results = copy.deepcopy(self.video_infos[idx])
         if self.memcached and 'key' in results:
+            from pymemcache.client.base import Client
+            from pymemcache import serde
+
             if self.cli is None:
-                from pymemcache.client.base import Client
-                from pymemcache import serde
                 self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
             key = results.pop('key')
             try:
                 pack = self.cli.get(key)
             except:
-                from pymemcache.client.base import Client
-                from pymemcache import serde
                 self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
                 pack = self.cli.get(key)
-            assert isinstance(pack, dict), f'Missing Key: {key}'
+            if not isinstance(pack, dict):
+                raw_file = results['raw_file']
+                data = mmcv.load(raw_file)
+                pack = data[key]
+                for k in data:
+                    try:
+                        self.cli.set(k, data[k])
+                    except:
+                        self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
+                        self.cli.set(k, data[k])
             for k in pack:
                 results[k] = pack[k]
 
@@ -250,19 +258,27 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         """Prepare the frames for testing given the index."""
         results = copy.deepcopy(self.video_infos[idx])
         if self.memcached and 'key' in results:
+            from pymemcache.client.base import Client
+            from pymemcache import serde
+
             if self.cli is None:
-                from pymemcache.client.base import Client
-                from pymemcache import serde
                 self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
             key = results.pop('key')
             try:
                 pack = self.cli.get(key)
             except:
-                from pymemcache.client.base import Client
-                from pymemcache import serde
                 self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
                 pack = self.cli.get(key)
-            assert isinstance(pack, dict), f'Missing Key: {key}'
+            if not isinstance(pack, dict):
+                raw_file = results['raw_file']
+                data = mmcv.load(raw_file)
+                pack = data[key]
+                for k in data:
+                    try:
+                        self.cli.set(k, data[k])
+                    except:
+                        self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
+                        self.cli.set(k, data[k])
             for k in pack:
                 results[k] = pack[k]
 

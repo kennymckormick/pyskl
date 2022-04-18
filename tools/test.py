@@ -137,28 +137,23 @@ def main():
     dataloader_setting = dict(dataloader_setting, **cfg.data.get('test_dataloader', {}))
     data_loader = build_dataloader(dataset, **dataloader_setting)
 
-    cli = None
     default_mc_cfg = ('localhost', 22077)
+    memcached = cfg.get('memcached', False)
 
-    if rank == 0:
+    if rank == 0 and memcached:
         # mc_list is a list of pickle files you want to cache in memory.
         # Basically, each pickle file is a dictionary.
-        mc_list = cfg.get('mc_list', None)
-        if mc_list is not None:
-            mc_cfg = cfg.get('mc_cfg', default_mc_cfg)
-            assert isinstance(mc_cfg, tuple) and mc_cfg[0] == 'localhost'
-            if not test_port(mc_cfg[0], mc_cfg[1]):
-                mc_on(port=mc_cfg[1], launcher=args.launcher)
-            retry = 3
-            while not test_port(mc_cfg[0], mc_cfg[1]) and retry > 0:
-                time.sleep(5)
-                retry -= 1
-            assert retry >= 0, 'Failed to launch memcached. '
-            assert isinstance(mc_list, list)
-            mp_cache(mc_cfg, mc_list)
+        mc_cfg = cfg.get('mc_cfg', default_mc_cfg)
+        assert isinstance(mc_cfg, tuple) and mc_cfg[0] == 'localhost'
+        if not test_port(mc_cfg[0], mc_cfg[1]):
+            mc_on(port=mc_cfg[1], launcher=args.launcher)
+        retry = 3
+        while not test_port(mc_cfg[0], mc_cfg[1]) and retry > 0:
+            time.sleep(5)
+            retry -= 1
+        assert retry >= 0, 'Failed to launch memcached. '
 
     dist.barrier()
-
     outputs = inference_pytorch(args, cfg, data_loader)
 
     rank, _ = get_dist_info()
@@ -171,7 +166,7 @@ def main():
                 print(f'{name}: {val:.04f}')
 
     dist.barrier()
-    if rank == 0 and cli is not None:
+    if rank == 0 and memcached:
         mc_off()
 
 
