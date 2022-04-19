@@ -8,7 +8,7 @@ import time
 import mmcv
 import torch
 import torch.distributed as dist
-from mmcv import Config, load
+from mmcv import Config
 from mmcv.runner import get_dist_info, init_dist, set_random_seed
 from mmcv.utils import get_git_hash
 
@@ -16,13 +16,12 @@ from pyskl import __version__
 from pyskl.apis import init_random_seed, train_model
 from pyskl.datasets import build_dataset
 from pyskl.models import build_model
-from pyskl.utils import collect_env, get_root_logger, mc_off, mc_on, mp_cache, test_port
+from pyskl.utils import collect_env, get_root_logger, mc_off, mc_on, test_port
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a recognizer')
     parser.add_argument('config', help='train config file path')
-    parser.add_argument('--work-dir', help='the dir to save logs and models')
     parser.add_argument(
         '--validate',
         action='store_true',
@@ -34,8 +33,7 @@ def parse_args():
     parser.add_argument(
         '--test-best',
         action='store_true',
-        help=('whether to test the best checkpoint (if applicable) after '
-              'training'))
+        help='whether to test the best checkpoint (if applicable) after training')
     parser.add_argument('--seed', type=int, default=None, help='random seed')
     parser.add_argument(
         '--deterministic',
@@ -64,11 +62,8 @@ def main():
         torch.backends.cudnn.benchmark = True
 
     # work_dir is determined in this priority:
-    # CLI > config file > default (base filename)
-    if args.work_dir is not None:
-        # update configs according to CLI args if args.work_dir is not None
-        cfg.work_dir = args.work_dir
-    elif cfg.get('work_dir', None) is None:
+    # config file > default (base filename)
+    if cfg.get('work_dir', None) is None:
         # use config filename as default work_dir if cfg.work_dir is None
         cfg.work_dir = osp.join('./work_dirs', osp.splitext(osp.basename(args.config))[0])
 

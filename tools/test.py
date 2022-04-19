@@ -17,7 +17,7 @@ from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 
 from pyskl.datasets import build_dataloader, build_dataset
 from pyskl.models import build_model
-from pyskl.utils import mc_off, mc_on, mp_cache, test_port
+from pyskl.utils import mc_off, mc_on, test_port
 
 
 def parse_args():
