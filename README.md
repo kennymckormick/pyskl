@@ -4,7 +4,7 @@
 
 PYSKL is a toolbox focusing on action recognition based on **SK**e**L**eton data with **PY**Torch. Various algorithms will be supported for skeleton-based action recognition. We build this project based on the OpenSource Project [MMAction2](https://github.com/open-mmlab/mmaction2).
 
-This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2104.13586) and [STGCN++]().
+This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2104.13586) and [STGCN++](https://github.com/kennymckormick/pyskl/tree/main/configs/stgcn%2B%2B).
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/34324155/123989146-2ecae680-d9fb-11eb-916b-b9db5563a9e5.gif" width="500px"><br>
@@ -18,13 +18,14 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
 ## Supported Algorithms
 
 - [x] ST-GCN (AAAI 2018): https://arxiv.org/abs/1801.07455 [[MODELZOO](/configs/stgcn/README.md)]
-- [x] ST-GCN++ (PYSKL): [Tech Report Coming Soon]() [[MODELZOO](/configs/stgcn++/README.md)]
+- [x] ST-GCN++ (PYSKL): [Tech Report Coming Soon](https://github.com/kennymckormick/pyskl/tree/main/configs/stgcn%2B%2B) [[MODELZOO](/configs/stgcn++/README.md)]
 - [x] PoseConv3D (CVPR 2022 Oral): https://arxiv.org/abs/2104.13586 [[MODELZOO](/configs/posec3d/README.md)]
 
 ## Installation
 ```shell
 git clone https://github.com/kennymckormick/pyskl.git
 cd pyskl
+# Please first install pytorch according to instructions on the official website: https://pytorch.org/get-started/locally/. Please use pytorch with version smaller than 1.11.0 and larger (or equal) than 1.5.0
 pip install -r requirements.txt
 pip install -e .
 ```
