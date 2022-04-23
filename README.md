@@ -18,7 +18,7 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
 ## Supported Algorithms
 
 - [x] ST-GCN (AAAI 2018): https://arxiv.org/abs/1801.07455 [[MODELZOO](/configs/stgcn/README.md)]
-- [x] ST-GCN++ (PYSKL): [Tech Report Coming Soon]() [[MODELZOO](/configs/stgcn++/README.md)]
+- [x] ST-GCN++ (PYSKL): [Tech Report Coming Soon](https://github.com/kennymckormick/pyskl/tree/main/configs/stgcn%2B%2B) [[MODELZOO](/configs/stgcn++/README.md)]
 - [x] PoseConv3D (CVPR 2022 Oral): https://arxiv.org/abs/2104.13586 [[MODELZOO](/configs/posec3d/README.md)]
 
 ## Installation
