@@ -25,6 +25,7 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
 ```shell
 git clone https://github.com/kennymckormick/pyskl.git
 cd pyskl
+# Please first install pytorch according to instructions on the official website: https://pytorch.org/get-started/locally/. Please use pytorch with version smaller than 1.11.0 and larger (or equal) than 1.5.0
 pip install -r requirements.txt
 pip install -e .
 ```
