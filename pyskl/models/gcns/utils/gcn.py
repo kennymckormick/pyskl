@@ -196,3 +196,88 @@ class unit_gcn(nn.Module):
 
     def init_weights(self):
         pass
+
+
+class CTRGC(nn.Module):
+    def __init__(self, in_channels, out_channels, rel_reduction=8):
+        super(CTRGC, self).__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        if in_channels <= 16:
+            self.rel_channels = 8
+        else:
+            self.rel_channels = in_channels // rel_reduction
+        self.conv1 = nn.Conv2d(self.in_channels, self.rel_channels, kernel_size=1)
+        self.conv2 = nn.Conv2d(self.in_channels, self.rel_channels, kernel_size=1)
+        self.conv3 = nn.Conv2d(self.in_channels, self.out_channels, kernel_size=1)
+        self.conv4 = nn.Conv2d(self.rel_channels, self.out_channels, kernel_size=1)
+        self.tanh = nn.Tanh()
+        self.init_weights()
+
+    def forward(self, x, A=None, alpha=1):
+        # Input: N, C, T, V
+        x1, x2, x3 = self.conv1(x).mean(-2), self.conv2(x).mean(-2), self.conv3(x)
+        # X1, X2: N, R, V
+        # N, R, V, 1 - N, R, 1, V
+        x1 = self.tanh(x1.unsqueeze(-1) - x2.unsqueeze(-2))
+        # N, R, V, V
+        x1 = self.conv4(x1) * alpha + (A[None, None] if A is not None else 0)  # N,C,V,V
+        x1 = torch.einsum('ncuv,nctu->nctv', x1, x3)
+        return x1
+
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                conv_init(m)
+            elif isinstance(m, nn.BatchNorm2d):
+                bn_init(m, 1)
+
+
+class unit_ctrgcn(nn.Module):
+    def __init__(self, in_channels, out_channels, A):
+
+        super(unit_ctrgcn, self).__init__()
+        inter_channels = out_channels // 4
+        self.inter_c = inter_channels
+        self.out_c = out_channels
+        self.in_c = in_channels
+
+        self.num_subset = A.shape[0]
+        self.convs = nn.ModuleList()
+
+        for i in range(self.num_subset):
+            self.convs.append(CTRGC(in_channels, out_channels))
+
+        if in_channels != out_channels:
+            self.down = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, 1),
+                nn.BatchNorm2d(out_channels)
+            )
+        else:
+            self.down = lambda x: x
+
+        self.A = nn.Parameter(A.clone())
+
+        self.alpha = nn.Parameter(torch.zeros(1))
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.soft = nn.Softmax(-2)
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        y = None
+
+        for i in range(self.num_subset):
+            z = self.convs[i](x, self.A[i], self.alpha)
+            y = z + y if y is not None else z
+
+        y = self.bn(y)
+        y += self.down(x)
+        return self.relu(y)
+
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                conv_init(m)
+            elif isinstance(m, nn.BatchNorm2d):
+                bn_init(m, 1)
+        bn_init(self.bn, 1e-6)
