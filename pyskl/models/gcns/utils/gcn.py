@@ -2,7 +2,123 @@ import torch
 import torch.nn as nn
 from mmcv.cnn import build_activation_layer, build_norm_layer
 
+from .init_func import bn_init, conv_branch_init, conv_init
+
 EPS = 1e-4
+
+
+class unit_aagcn(nn.Module):
+    def __init__(self, in_channels, out_channels, A, coff_embedding=4, adaptive=True, attention=True):
+        super(unit_gcn, self).__init__()
+        inter_channels = out_channels // coff_embedding
+        self.inter_c = inter_channels
+        self.out_c = out_channels
+        self.in_c = in_channels
+        self.num_subset = A.shape[0]
+        self.adaptive = adaptive
+        self.attention = attention
+
+        num_joints = A.shape[-1]
+
+        self.conv_d = nn.ModuleList()
+        for i in range(self.num_subset):
+            self.conv_d.append(nn.Conv2d(in_channels, out_channels, 1))
+
+        if self.adaptive:
+            self.A = nn.Parameter(A)
+
+            self.alpha = nn.Parameter(torch.zeros(1))
+            self.conv_a = nn.ModuleList()
+            self.conv_b = nn.ModuleList()
+            for i in range(self.num_subset):
+                self.conv_a.append(nn.Conv2d(in_channels, inter_channels, 1))
+                self.conv_b.append(nn.Conv2d(in_channels, inter_channels, 1))
+        else:
+            self.register_buffer('A', A)
+
+        if self.attention:
+            self.conv_ta = nn.Conv1d(out_channels, 1, 9, padding=4)
+            # s attention
+            ker_joint = num_joints if num_joints % 2 else num_joints - 1
+            pad = (ker_joint - 1) // 2
+            self.conv_sa = nn.Conv1d(out_channels, 1, ker_joint, padding=pad)
+            # channel attention
+            rr = 2
+            self.fc1c = nn.Linear(out_channels, out_channels // rr)
+            self.fc2c = nn.Linear(out_channels // rr, out_channels)
+
+        self.down = lambda x: x
+        if in_channels != out_channels:
+            self.down = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, 1),
+                nn.BatchNorm2d(out_channels)
+            )
+
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.tan = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
+        self.relu = nn.ReLU(inplace=True)
+
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                conv_init(m)
+            elif isinstance(m, nn.BatchNorm2d):
+                bn_init(m, 1)
+        bn_init(self.bn, 1e-6)
+        for i in range(self.num_subset):
+            conv_branch_init(self.conv_d[i], self.num_subset)
+
+        if self.attention:
+            nn.init.constant_(self.conv_ta.weight, 0)
+            nn.init.constant_(self.conv_ta.bias, 0)
+
+            nn.init.xavier_normal_(self.conv_sa.weight)
+            nn.init.constant_(self.conv_sa.bias, 0)
+
+            nn.init.kaiming_normal_(self.fc1c.weight)
+            nn.init.constant_(self.fc1c.bias, 0)
+            nn.init.constant_(self.fc2c.weight, 0)
+            nn.init.constant_(self.fc2c.bias, 0)
+
+    def forward(self, x):
+        N, C, T, V = x.size()
+
+        y = None
+        if self.adaptive:
+            for i in range(self.num_subset):
+                A1 = self.conv_a[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T)
+                A2 = self.conv_b[i](x).view(N, self.inter_c * T, V)
+                A1 = self.tan(torch.matmul(A1, A2) / A1.size(-1))  # N V V
+                A1 = self.A[i] + A1 * self.alpha
+                A2 = x.view(N, C * T, V)
+                z = self.conv_d[i](torch.matmul(A2, A1).view(N, C, T, V))
+                y = z + y if y is not None else z
+        else:
+            for i in range(self.num_subset):
+                A1 = self.A[i]
+                A2 = x.view(N, C * T, V)
+                z = self.conv_d[i](torch.matmul(A2, A1).view(N, C, T, V))
+                y = z + y if y is not None else z
+
+        y = self.relu(self.bn(y) + self.down(x))
+
+        if self.attention:
+            # spatial attention first
+            se = y.mean(-2)  # N C V
+            se1 = self.sigmoid(self.conv_sa(se))  # N 1 V
+            y = y * se1.unsqueeze(-2) + y
+            # then temporal attention
+            se = y.mean(-1)  # N C T
+            se1 = self.sigmoid(self.conv_ta(se))  # N 1 T
+            y = y * se1.unsqueeze(-1) + y
+            # then spatial temporal attention ??
+            se = y.mean(-1).mean(-1)  # N C
+            se1 = self.relu(self.fc1c(se))
+            se2 = self.sigmoid(self.fc2c(se1))  # N C
+            y = y * se2.unsqueeze(-1).unsqueeze(-1) + y
+            # A little bit weird
+        return y
 
 
 class unit_gcn(nn.Module):
@@ -77,3 +193,6 @@ class unit_gcn(nn.Module):
             x = self.conv(x)
 
         return self.act(self.bn(x) + res)
+
+    def init_weights(self):
+        pass

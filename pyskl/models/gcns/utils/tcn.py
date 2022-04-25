@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 from mmcv.cnn import build_norm_layer
 
+from .init_func import bn_init, conv_init
+
 
 class unit_tcn(nn.Module):
 
@@ -27,6 +29,10 @@ class unit_tcn(nn.Module):
 
     def forward(self, x):
         return self.drop(self.bn(self.conv(x)))
+
+    def init_weights(self):
+        conv_init(self.conv)
+        bn_init(self.bn, 1)
 
 
 class mstcn(nn.Module):
@@ -103,3 +109,6 @@ class mstcn(nn.Module):
         out = self.inner_forward(x)
         out = self.bn(out)
         return self.drop(out)
+
+    def init_weights(self):
+        pass
