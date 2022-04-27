@@ -4,8 +4,9 @@ import torch.nn as nn
 from mmcv.cnn import build_activation_layer
 from mmcv.utils import _BatchNorm
 
-from ...utils.graph import k_adjacency, normalize_digraph
-from .agcn import bn_init, conv_init, unit_tcn
+from ....utils.graph import k_adjacency, normalize_digraph
+from .init_func import bn_init, conv_init
+from .tcn import unit_tcn
 
 
 class MLP(nn.Module):

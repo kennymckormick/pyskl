@@ -46,8 +46,8 @@ class CTRGCNBlock(nn.Module):
 @BACKBONES.register_module()
 class CTRGCN(nn.Module):
     def __init__(self,
-                 in_channels,
                  graph_cfg,
+                 in_channels=3,
                  base_channels=64,
                  num_stages=10,
                  inflate_stages=[5, 8],

@@ -10,8 +10,8 @@ from .utils import MSGCN, MSTCN, MW_MSG3DBlock
 @BACKBONES.register_module()
 class MSG3D(nn.Module):
     def __init__(self,
-                 in_channels,
                  graph_cfg,
+                 in_channels=3,
                  base_channels=96,
                  num_gcn_scales=13,
                  num_g3d_scales=6,
