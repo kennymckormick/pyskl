@@ -111,3 +111,15 @@ def download_file(url, filename=None):
         filename = url.split('/')[-1]
     response = requests.get(url)
     open(filename, 'wb').write(response.content)
+
+def gen_bash(cfgs, num_gpus):
+    rd.shuffle(cfgs)
+    for i in range(num_gpus):
+        cmds = []
+        for c in cfgs[i::num_gpus]:
+            port = rd.randint(30000, 50000)
+            cmds.append(
+                f'CUDA_VISIBLE_DEVICES={i} PORT={port} bash tools/dist_train.sh {c} 1 '
+                '--validate --test-last --test-best'
+            )
+        mwlines(cmds, f'train_{i}.sh')
