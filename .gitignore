@@ -130,3 +130,4 @@ examples/extract_diving48_skeleton/*json
 examples/extract_diving48_skeleton/*list
 examples/extract_diving48_skeleton/*pkl
 configs/gen_config.ipynb
+dev.ipynb
