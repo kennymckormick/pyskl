@@ -100,13 +100,13 @@ class RandomScale:
         self.scale = scale
 
     def __call__(self, results):
-        skeleton = results['skeleton']
+        skeleton = results['keypoint']
         scale = self.scale
         if isinstance(scale, float):
             scale = (scale, ) * skeleton.shape[-1]
         assert len(scale) == skeleton.shape[-1]
         scale = 1 + np.random.uniform(-1, 1, size=len(scale)) * np.array(scale)
-        results['skeleton'] = skeleton * scale
+        results['keypoint'] = skeleton * scale
         return results
 
 
