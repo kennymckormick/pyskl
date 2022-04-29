@@ -119,7 +119,7 @@ def gen_bash(cfgs, num_gpus, gpus_per_task=1):
         cmds = []
         for c in cfgs[i::num_bash]:
             port = rd.randint(30000, 50000)
-            gpu_ids = list(range(i, num_gpus, gpus_per_task))
+            gpu_ids = list(range(i, num_gpus, num_bash))
             gpu_ids = ','.join([str(x) for x in gpu_ids])
             cmds.append(
                 f'CUDA_VISIBLE_DEVICES={gpu_ids} PORT={port} bash tools/dist_train.sh {c} {gpus_per_task} '
