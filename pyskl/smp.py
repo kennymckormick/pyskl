@@ -112,14 +112,17 @@ def download_file(url, filename=None):
     response = requests.get(url)
     open(filename, 'wb').write(response.content)
 
-def gen_bash(cfgs, num_gpus):
+def gen_bash(cfgs, num_gpus, gpus_per_task=1):
     rd.shuffle(cfgs)
-    for i in range(num_gpus):
+    num_bash = num_gpus // gpus_per_task
+    for i in range(num_bash):
         cmds = []
-        for c in cfgs[i::num_gpus]:
+        for c in cfgs[i::num_bash]:
             port = rd.randint(30000, 50000)
+            gpu_ids = list(range(i, num_gpus, gpus_per_task))
+            gpu_ids = ','.join([str(x) for x in gpu_ids])
             cmds.append(
-                f'CUDA_VISIBLE_DEVICES={i} PORT={port} bash tools/dist_train.sh {c} 1 '
+                f'CUDA_VISIBLE_DEVICES={gpu_ids} PORT={port} bash tools/dist_train.sh {c} {gpus_per_task} '
                 '--validate --test-last --test-best'
             )
         mwlines(cmds, f'train_{i}.sh')
