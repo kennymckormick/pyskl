@@ -1,8 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+# flake8: noqa: E722
 import logging
+import multiprocessing as mp
 import os
+import os.path as osp
 import socket
 
+from mmcv import load
 from mmcv.utils import get_logger
 
 
@@ -10,6 +14,39 @@ def mc_on(port=22077, launcher='pytorch', size=24000):
     # size is mb, allocate 24GB memory by default.
     mc_exe = 'memcached' if launcher == 'pytorch' else '/mnt/lustre/share/memcached/bin/memcached'
     os.system(f'{mc_exe} -p {port} -m {size}m -d')
+
+
+def cache_file(arg_tuple):
+    mc_cfg, data_file = arg_tuple
+    assert isinstance(mc_cfg, tuple) and mc_cfg[0] == 'localhost'
+    retry = 3
+    while not test_port(mc_cfg[0], mc_cfg[1]) and retry > 0:
+        time.sleep(5)
+        retry -= 1
+    assert retry >= 0, 'Failed to launch memcached. '
+    from pymemcache.client.base import Client
+    from pymemcache import serde
+
+    cli = Client(mc_cfg, serde=serde.pickle_serde)
+
+    assert osp.exists(data_file)
+    kv_dict = load(data_file)
+    if isinstance(kv_dict, list):
+        assert ('frame_dir' in kv_dict[0]) != ('filename' in kv_dict[0])
+        key = 'frame_dir' if 'frame_dir' in kv_dict[0] else 'filename'
+        kv_dict = {x[key]: x for x in kv_dict}
+    for k, v in kv_dict.items():
+        try:
+            cli.set(k, v)
+        except:
+            cli = Client(mc_cfg, serde=serde.pickle_serde)
+            cli.set(k, v)
+
+
+def mp_cache(mc_cfg, mc_list, num_proc=12):
+    args = [(mc_cfg, x) for x in mc_list]
+    pool = mp.Pool(num_proc)
+    pool.map(cache_file, args)
 
 
 def mc_off():

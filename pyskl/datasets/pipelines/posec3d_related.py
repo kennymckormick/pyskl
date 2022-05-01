@@ -33,6 +33,12 @@ class GeneratePoseTarget:
         right_kp (tuple[int]): Indexes of right keypoints, which is used when
             flipping heatmaps. Default: (2, 4, 6, 8, 10, 12, 14, 16),
             which is right keypoints in COCO-17p.
+        left_limb (tuple[int]): Indexes of left limbs, which is used when
+            flipping heatmaps. Default: (1, 3, 5, 7, 9, 11, 13, 15),
+            which is left limbs of skeletons we defined for COCO-17p.
+        right_limb (tuple[int]): Indexes of right limbs, which is used when
+            flipping heatmaps. Default: (2, 4, 6, 8, 10, 12, 14, 16),
+            which is right limbs of skeletons we defined for COCO-17p.
     """
 
     def __init__(self,

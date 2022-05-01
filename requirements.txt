@@ -5,6 +5,7 @@ moviepy
 numpy>=1.19.5
 opencv-contrib-python
 opencv-python
+pymemcache
 scipy
 torch>=1.5
 tqdm
