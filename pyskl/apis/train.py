@@ -169,9 +169,7 @@ def train_model(model,
                 best_ckpt_path = osp.join(cfg.work_dir, best_ckpt_path)
 
         test_dataset = build_dataset(cfg.data.test, dict(test_mode=True))
-        gpu_collect = cfg.get('evaluation', {}).get('gpu_collect', False)
-        tmpdir = cfg.get('evaluation', {}).get('tmpdir',
-                                               osp.join(cfg.work_dir, 'tmp'))
+        tmpdir = cfg.get('evaluation', {}).get('tmpdir', osp.join(cfg.work_dir, 'tmp'))
         dataloader_setting = dict(
             videos_per_gpu=cfg.data.get('videos_per_gpu', 1),
             workers_per_gpu=cfg.data.get('workers_per_gpu', 1),
@@ -195,8 +193,7 @@ def train_model(model,
             if ckpt is not None:
                 runner.load_checkpoint(ckpt)
 
-            outputs = multi_gpu_test(runner.model, test_dataloader, tmpdir,
-                                     gpu_collect)
+            outputs = multi_gpu_test(runner.model, test_dataloader, tmpdir)
             rank, _ = get_dist_info()
             if rank == 0:
                 out = osp.join(cfg.work_dir, f'{name}_pred.pkl')
@@ -204,7 +201,7 @@ def train_model(model,
 
                 eval_cfg = cfg.get('evaluation', {})
                 for key in [
-                        'interval', 'tmpdir', 'start', 'gpu_collect',
+                        'interval', 'tmpdir', 'start',
                         'save_best', 'rule', 'by_epoch', 'broadcast_bn_buffers'
                 ]:
                     eval_cfg.pop(key, None)

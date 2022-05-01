@@ -3,7 +3,6 @@ import random
 import warnings
 from collections.abc import Sequence
 
-import cv2
 import mmcv
 import numpy as np
 from torch.nn.modules.utils import _pair
@@ -693,103 +692,6 @@ class Normalize:
                     f'std={self.std}, '
                     f'to_bgr={self.to_bgr}, '
                     f'adjust_magnitude={self.adjust_magnitude})')
-        return repr_str
-
-
-@PIPELINES.register_module()
-class ColorJitter:
-    """Perform ColorJitter to each img.
-
-    Required keys are "imgs", added or modified keys are "imgs".
-
-    Args:
-        brightness (float | tuple[float]): The jitter range for brightness, if
-            set as a float, the range will be (1 - brightness, 1 + brightness).
-            Default: 0.5.
-        contrast (float | tuple[float]): The jitter range for contrast, if set
-            as a float, the range will be (1 - contrast, 1 + contrast).
-            Default: 0.5.
-        saturation (float | tuple[float]): The jitter range for saturation, if
-            set as a float, the range will be (1 - saturation, 1 + saturation).
-            Default: 0.5.
-        hue (float | tuple[float]): The jitter range for hue, if set as a
-            float, the range will be (-hue, hue). Default: 0.1.
-    """
-
-    @staticmethod
-    def check_input(val, max, base):
-        if isinstance(val, tuple):
-            assert base - max <= val[0] <= val[1] <= base + max
-            return val
-        assert val <= max
-        return (base - val, base + val)
-
-    @staticmethod
-    def rgb_to_grayscale(img):
-        return 0.2989 * img[..., 0] + 0.587 * img[..., 1] + 0.114 * img[..., 2]
-
-    @staticmethod
-    def adjust_contrast(img, factor):
-        val = np.mean(ColorJitter.rgb_to_grayscale(img))
-        return factor * img + (1 - factor) * val
-
-    @staticmethod
-    def adjust_saturation(img, factor):
-        gray = np.stack([ColorJitter.rgb_to_grayscale(img)] * 3, axis=-1)
-        return factor * img + (1 - factor) * gray
-
-    @staticmethod
-    def adjust_hue(img, factor):
-        img = np.clip(img, 0, 255).astype(np.uint8)
-        hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-        offset = int(factor * 255)
-        hsv[..., 0] = (hsv[..., 0] + offset) % 180
-        img = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
-        return img.astype(np.float32)
-
-    def __init__(self, brightness=0.5, contrast=0.5, saturation=0.5, hue=0.1):
-        self.brightness = self.check_input(brightness, 1, 1)
-        self.contrast = self.check_input(contrast, 1, 1)
-        self.saturation = self.check_input(saturation, 1, 1)
-        self.hue = self.check_input(hue, 0.5, 0)
-        self.fn_idx = np.random.permutation(4)
-
-    def __call__(self, results):
-        imgs = results['imgs']
-        num_clips, clip_len = 1, len(imgs)
-
-        new_imgs = []
-        for i in range(num_clips):
-            b = np.random.uniform(
-                low=self.brightness[0], high=self.brightness[1])
-            c = np.random.uniform(low=self.contrast[0], high=self.contrast[1])
-            s = np.random.uniform(
-                low=self.saturation[0], high=self.saturation[1])
-            h = np.random.uniform(low=self.hue[0], high=self.hue[1])
-            start, end = i * clip_len, (i + 1) * clip_len
-
-            for img in imgs[start:end]:
-                img = img.astype(np.float32)
-                for fn_id in self.fn_idx:
-                    if fn_id == 0 and b != 1:
-                        img *= b
-                    if fn_id == 1 and c != 1:
-                        img = self.adjust_contrast(img, c)
-                    if fn_id == 2 and s != 1:
-                        img = self.adjust_saturation(img, s)
-                    if fn_id == 3 and h != 0:
-                        img = self.adjust_hue(img, h)
-                img = np.clip(img, 0, 255).astype(np.uint8)
-                new_imgs.append(img)
-        results['imgs'] = new_imgs
-        return results
-
-    def __repr__(self):
-        repr_str = (f'{self.__class__.__name__}('
-                    f'brightness={self.brightness}, '
-                    f'contrast={self.contrast}, '
-                    f'saturation={self.saturation}, '
-                    f'hue={self.hue})')
         return repr_str
 
 
