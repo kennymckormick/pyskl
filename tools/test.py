@@ -1,14 +1,14 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+# flake8: noqa: E722
 import argparse
 import os
 import os.path as osp
 import time
-import warnings
 
 import mmcv
 import torch
 import torch.distributed as dist
-from mmcv import Config, DictAction, load
+from mmcv import Config, load
 from mmcv.cnn import fuse_conv_bn
 from mmcv.engine import multi_gpu_test
 from mmcv.fileio.io import file_handlers
@@ -42,28 +42,8 @@ def parse_args():
         help='evaluation metrics, which depends on the dataset, e.g.,'
         ' "top_k_accuracy", "mean_class_accuracy" for video dataset')
     parser.add_argument(
-        '--gpu-collect',
-        action='store_true',
-        help='whether to use gpu to collect results')
-    parser.add_argument(
         '--tmpdir',
-        help='tmp directory used for collecting results from multiple '
-        'workers, available when gpu-collect is not specified')
-    parser.add_argument(
-        '--options',
-        nargs='+',
-        action=DictAction,
-        default={},
-        help='custom options for evaluation, the key-value pair in xxx=yyy '
-        'format will be kwargs for dataset.evaluate() function (deprecate), '
-        'change to --eval-options instead.')
-    parser.add_argument(
-        '--eval-options',
-        nargs='+',
-        action=DictAction,
-        default={},
-        help='custom options for evaluation, the key-value pair in xxx=yyy '
-        'format will be kwargs for dataset.evaluate() function')
+        help='tmp directory used for collecting results from multiple workers')
     parser.add_argument(
         '--average-clips',
         choices=['score', 'prob', None],
@@ -79,13 +59,6 @@ def parse_args():
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
 
-    if args.options and args.eval_options:
-        raise ValueError(
-            '--options and --eval-options cannot be both '
-            'specified, --options is deprecated in favor of --eval-options')
-    if args.options:
-        warnings.warn('--options is deprecated in favor of --eval-options')
-        args.eval_options = args.options
     return args
 
 
@@ -119,7 +92,7 @@ def inference_pytorch(args, cfg, data_loader):
         model.cuda(),
         device_ids=[torch.cuda.current_device()],
         broadcast_buffers=False)
-    outputs = multi_gpu_test(model, data_loader, args.tmpdir, args.gpu_collect)
+    outputs = multi_gpu_test(model, data_loader, args.tmpdir)
 
     return outputs
 
@@ -133,20 +106,15 @@ def main():
 
     # Load eval_config from cfg
     eval_cfg = cfg.get('evaluation', {})
-    keys = ['interval', 'tmpdir', 'start', 'gpu_collect', 'save_best', 'rule', 'by_epoch', 'broadcast_bn_buffers']
+    keys = ['interval', 'tmpdir', 'start', 'save_best', 'rule', 'by_epoch', 'broadcast_bn_buffers']
     for key in keys:
         eval_cfg.pop(key, None)
     if args.eval:
         eval_cfg['metrics'] = args.eval
 
-    dataset_type = cfg.data.test.type
-
     mmcv.mkdir_or_exist(osp.dirname(out))
     _, suffix = osp.splitext(out)
-    if dataset_type == 'AVADataset':
-        assert suffix[1:] == 'csv', ('For AVADataset, the format of the output file should be csv')
-    else:
-        assert suffix[1:] in file_handlers, ('The format of the output file should be json, pickle or yaml')
+    assert suffix[1:] in file_handlers, ('The format of the output file should be json, pickle or yaml')
 
     # set cudnn benchmark
     if cfg.get('cudnn_benchmark', False):
@@ -169,36 +137,23 @@ def main():
     dataloader_setting = dict(dataloader_setting, **cfg.data.get('test_dataloader', {}))
     data_loader = build_dataloader(dataset, **dataloader_setting)
 
-    so_keys, cli = set(), None
-    if rank == 0:
-        mc_list = cfg.get('mc_list', None)
-        if mc_list is not None:
-            mc_cfg = cfg.get('mc_cfg', ('localhost', 11211))
-            assert isinstance(mc_cfg, tuple) and mc_cfg[0] == 'localhost'
-            if not test_port(mc_cfg[0], mc_cfg[1]):
-                mc_on(port=mc_cfg[1], launcher=args.launcher)
-            retry = 3
-            while not test_port(mc_cfg[0], mc_cfg[1]) and retry > 0:
-                time.sleep(5)
-                retry -= 1
-            assert retry >= 0, 'Failed to launch memcached. '
-            assert isinstance(mc_list, list)
-            from pymemcache.client.base import Client
-            from pymemcache import serde
-            cli = Client(mc_cfg, serde=serde.pickle_serde)
-            for data_file in mc_list:
-                assert osp.exists(data_file)
-                kv_dict = load(data_file)
-                if isinstance(kv_dict, list):
-                    assert ('frame_dir' in kv_dict[0]) != ('filename' in kv_dict[0])
-                    key = 'frame_dir' if 'frame_dir' in kv_dict[0] else 'filename'
-                    kv_dict = {x[key]: x for x in kv_dict}
-                for k, v in kv_dict.items():
-                    assert k not in so_keys
-                    cli.set(k, v)
-                    so_keys.add(k)
-    dist.barrier()
+    default_mc_cfg = ('localhost', 22077)
+    memcached = cfg.get('memcached', False)
 
+    if rank == 0 and memcached:
+        # mc_list is a list of pickle files you want to cache in memory.
+        # Basically, each pickle file is a dictionary.
+        mc_cfg = cfg.get('mc_cfg', default_mc_cfg)
+        assert isinstance(mc_cfg, tuple) and mc_cfg[0] == 'localhost'
+        if not test_port(mc_cfg[0], mc_cfg[1]):
+            mc_on(port=mc_cfg[1], launcher=args.launcher)
+        retry = 3
+        while not test_port(mc_cfg[0], mc_cfg[1]) and retry > 0:
+            time.sleep(5)
+            retry -= 1
+        assert retry >= 0, 'Failed to launch memcached. '
+
+    dist.barrier()
     outputs = inference_pytorch(args, cfg, data_loader)
 
     rank, _ = get_dist_info()
@@ -211,9 +166,7 @@ def main():
                 print(f'{name}: {val:.04f}')
 
     dist.barrier()
-    if rank == 0 and cli is not None:
-        for k in so_keys:
-            cli.delete(k)
+    if rank == 0 and memcached:
         mc_off()
 
 

@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
+from scipy.stats import mode as get_mode
 
 from ..builder import PIPELINES
 from .compose import Compose
@@ -352,3 +353,88 @@ class FormatGCNInput:
     def __repr__(self):
         repr_str = self.__class__.__name__ + f'(num_person={self.num_person}, mode={self.mode})'
         return repr_str
+
+
+@PIPELINES.register_module()
+class DecompressPose:
+    """Load Compressed Pose
+
+    In compressed pose annotations, each item contains the following keys:
+    Original keys: 'label', 'frame_dir', 'img_shape', 'original_shape', 'total_frames'
+    New keys: 'frame_inds', 'keypoint', 'anno_inds'.
+    This operation: 'frame_inds', 'keypoint', 'total_frames', 'anno_inds'
+         -> 'keypoint', 'keypoint_score', 'total_frames'
+
+    Args:
+        squeeze (bool): Whether to remove frames with no human pose. Default: True.
+        max_person (int): The max number of persons in a frame, we keep skeletons with scores from high to low.
+            Default: 10.
+    """
+
+    def __init__(self,
+                 squeeze=True,
+                 max_person=10):
+
+        self.squeeze = squeeze
+        self.max_person = max_person
+
+    def __call__(self, results):
+
+        required_keys = ['total_frames', 'frame_inds', 'keypoint']
+        for k in required_keys:
+            assert k in results
+
+        total_frames = results['total_frames']
+        frame_inds = results.pop('frame_inds')
+        keypoint = results['keypoint']
+
+        if 'anno_inds' in results:
+            frame_inds = frame_inds[results['anno_inds']]
+            keypoint = keypoint[results['anno_inds']]
+
+        assert np.all(np.diff(frame_inds) >= 0), 'frame_inds should be monotonical increasing'
+
+        def mapinds(inds):
+            uni = np.unique(inds)
+            map_ = {x: i for i, x in enumerate(uni)}
+            inds = [map_[x] for x in inds]
+            return np.array(inds, dtype=np.int16)
+
+        if self.squeeze:
+            frame_inds = mapinds(frame_inds)
+            total_frames = np.max(frame_inds) + 1
+
+        results['total_frames'] = total_frames
+
+        num_joints = keypoint.shape[1]
+        num_person = get_mode(frame_inds)[-1][0]
+
+        new_kp = np.zeros([num_person, total_frames, num_joints, 2], dtype=np.float16)
+        new_kpscore = np.zeros([num_person, total_frames, num_joints], dtype=np.float16)
+        # 32768 is enough
+        nperson_per_frame = np.zeros([total_frames], dtype=np.int16)
+
+        for frame_ind, kp in zip(frame_inds, keypoint):
+            person_ind = nperson_per_frame[frame_ind]
+            new_kp[person_ind, frame_ind] = kp[:, :2]
+            new_kpscore[person_ind, frame_ind] = kp[:, 2]
+            nperson_per_frame[frame_ind] += 1
+
+        if num_person > self.max_person:
+            for i in range(total_frames):
+                nperson = nperson_per_frame[i]
+                val = new_kpscore[:nperson, i]
+                score_sum = val.sum(-1)
+
+                inds = sorted(range(nperson), key=lambda x: -score_sum[x])
+                new_kpscore[:nperson, i] = new_kpscore[inds, i]
+                new_kp[:nperson, i] = new_kp[inds, i]
+            num_person = self.max_person
+            results['num_person'] = num_person
+
+        results['keypoint'] = new_kp[:num_person]
+        results['keypoint_score'] = new_kpscore[:num_person]
+        return results
+
+    def __repr__(self):
+        return (f'{self.__class__.__name__}(squeeze={self.squeeze}, max_person={self.max_person})')
