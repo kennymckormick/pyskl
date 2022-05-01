@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+# flake8: noqa: E722
 import argparse
 import os
 import os.path as osp
@@ -7,7 +8,7 @@ import time
 import mmcv
 import torch
 import torch.distributed as dist
-from mmcv import Config, load
+from mmcv import Config
 from mmcv.runner import get_dist_info, init_dist, set_random_seed
 from mmcv.utils import get_git_hash
 
@@ -21,7 +22,6 @@ from pyskl.utils import collect_env, get_root_logger, mc_off, mc_on, test_port
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a recognizer')
     parser.add_argument('config', help='train config file path')
-    parser.add_argument('--work-dir', help='the dir to save logs and models')
     parser.add_argument(
         '--validate',
         action='store_true',
@@ -33,8 +33,7 @@ def parse_args():
     parser.add_argument(
         '--test-best',
         action='store_true',
-        help=('whether to test the best checkpoint (if applicable) after '
-              'training'))
+        help='whether to test the best checkpoint (if applicable) after training')
     parser.add_argument('--seed', type=int, default=None, help='random seed')
     parser.add_argument(
         '--deterministic',
@@ -63,11 +62,8 @@ def main():
         torch.backends.cudnn.benchmark = True
 
     # work_dir is determined in this priority:
-    # CLI > config file > default (base filename)
-    if args.work_dir is not None:
-        # update configs according to CLI args if args.work_dir is not None
-        cfg.work_dir = args.work_dir
-    elif cfg.get('work_dir', None) is None:
+    # config file > default (base filename)
+    if cfg.get('work_dir', None) is None:
         # use config filename as default work_dir if cfg.work_dir is None
         cfg.work_dir = osp.join('./work_dirs', osp.splitext(osp.basename(args.config))[0])
 
@@ -122,55 +118,32 @@ def main():
         # checkpoints as meta data
         cfg.checkpoint_config.meta = dict(
             pyskl_version=__version__ + get_git_hash(digits=7),
-            tag=['nturgb+d graph changed', 'scale A > 1 in training, unchanged in testing'],
             config=cfg.pretty_text)
 
     test_option = dict(test_last=args.test_last, test_best=args.test_best)
 
-    # We need to write the keys into memcache
-    so_keys, cli = set(), None
-    if rank == 0:
-        mc_list = cfg.get('mc_list', None)
-        if mc_list is not None:
-            mc_cfg = cfg.get('mc_cfg', ('localhost', 11211))
-            assert isinstance(mc_cfg, tuple) and mc_cfg[0] == 'localhost'
-            if not test_port(mc_cfg[0], mc_cfg[1]):
-                mc_on(port=mc_cfg[1], launcher=args.launcher)
-            retry = 3
-            while not test_port(mc_cfg[0], mc_cfg[1]) and retry > 0:
-                time.sleep(5)
-                retry -= 1
-            assert retry >= 0, 'Failed to launch memcached. '
-            assert isinstance(mc_list, list)
-            from pymemcache.client.base import Client
-            from pymemcache import serde
-            cli = Client(mc_cfg, serde=serde.pickle_serde)
-            for data_file in mc_list:
-                assert osp.exists(data_file)
-                kv_dict = load(data_file)
-                if isinstance(kv_dict, list):
-                    assert ('frame_dir' in kv_dict[0]) != ('filename' in kv_dict[0])
-                    key = 'frame_dir' if 'frame_dir' in kv_dict[0] else 'filename'
-                    kv_dict = {x[key]: x for x in kv_dict}
-                for k, v in kv_dict.items():
-                    assert k not in so_keys
-                    cli.set(k, v)
-                    so_keys.add(k)
-    dist.barrier()
+    default_mc_cfg = ('localhost', 22077)
+    memcached = cfg.get('memcached', False)
 
-    train_model(
-        model,
-        datasets,
-        cfg,
-        validate=args.validate,
-        test=test_option,
-        timestamp=timestamp,
-        meta=meta)
+    if rank == 0 and memcached:
+        # mc_list is a list of pickle files you want to cache in memory.
+        # Basically, each pickle file is a dictionary.
+        mc_cfg = cfg.get('mc_cfg', default_mc_cfg)
+        assert isinstance(mc_cfg, tuple) and mc_cfg[0] == 'localhost'
+        if not test_port(mc_cfg[0], mc_cfg[1]):
+            mc_on(port=mc_cfg[1], launcher=args.launcher)
+        retry = 3
+        while not test_port(mc_cfg[0], mc_cfg[1]) and retry > 0:
+            time.sleep(5)
+            retry -= 1
+        assert retry >= 0, 'Failed to launch memcached. '
 
     dist.barrier()
-    if rank == 0 and cli is not None:
-        for k in so_keys:
-            cli.delete(k)
+
+    train_model(model, datasets, cfg, validate=args.validate, test=test_option, timestamp=timestamp, meta=meta)
+    dist.barrier()
+
+    if rank == 0 and memcached:
         mc_off()
 
 
