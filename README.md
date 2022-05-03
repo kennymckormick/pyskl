@@ -8,8 +8,9 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/34324155/123989146-2ecae680-d9fb-11eb-916b-b9db5563a9e5.gif" width="500px"><br>
-  <p style="font-size:1.5vw;">Skeleton-base Action Recognition Results on NTU-RGB+D-120</p>
+  <p style="font-size:1.2vw;">Skeleton-base Action Recognition Results on NTU-RGB+D-120</p>
 </div>
+
 
 ## News
 
@@ -43,8 +44,21 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+## Demonstration
+
+```shell
+# You should run the following scripts under the directory `$PYSKL`
+# Running the demo with PoseC3D trained on NTURGB+D 120 (Joint Modality), which is the default option. The input file is demo/ntu_sample.avi, the output file is demo/demo.mp4
+python demo/demo_skeleton.py demo/ntu_sample.avi demo/demo.mp4
+# Running the demo with STGCN++ trained on NTURGB+D 120 (Joint Modality). The input file is demo/ntu_sample.avi, the output file is demo/demo.mp4
+python demo/demo_skeleton.py demo/ntu_sample.avi demo/demo.mp4 --config configs/stgcn++/stgcn++_ntu120_xsub_hrnet/j.py --ckpt http://download.openmmlab.com/mmaction/pyskl/ckpt/stgcnpp/stgcnpp_ntu120_xsub_hrnet/j.pth
+```
+
+Note that for running demo on an arbitrary input video, you need a tracker to formulate pose estimation results for each frame into multiple skeleton sequences. Currently we are using a [naive tracker]() based on inter-frame pose similarities. You can also try to write your own tracker.
+
 ## Training & Testing
-You can use following commands for training and testing. Basically, we support distribued training on a single server with multiple GPUs.
+
+You can use following commands for training and testing. Basically, we support distributed training on a single server with multiple GPUs.
 ```shell
 # Training
 bash tools/dist_train.sh {config_name} {num_gpus} {other_options}
