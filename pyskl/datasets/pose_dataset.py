@@ -76,8 +76,8 @@ class PoseDataset(BaseDataset):
                 anno_inds = (item['box_score'] >= self.box_thr)
                 item['anno_inds'] = anno_inds
         for item in self.video_infos:
-            item.pop('valid')
-            item.pop('box_score')
+            item.pop('valid', None)
+            item.pop('box_score', None)
             if self.memcached:
                 item['key'] = item['frame_dir']
 
