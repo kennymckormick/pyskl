@@ -3,7 +3,7 @@ model = dict(
     backbone=dict(
 		type='MSG3D',
         graph_cfg=dict(layout='coco', mode='binary_adj')),
-    cls_head=dict(type='GCNHead', num_classes=120, in_channels=256))
+    cls_head=dict(type='GCNHead', num_classes=120, in_channels=384))
 
 dataset_type = 'PoseDataset'
 ann_file = 'data/nturgbd/ntu120_hrnet.pkl'
