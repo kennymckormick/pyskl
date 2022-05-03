@@ -9,9 +9,9 @@ import cv2
 import mmcv
 import numpy as np
 import torch
+from scipy.optimize import linear_sum_assignment
 
 from pyskl.apis import inference_recognizer, init_recognizer
-from scipy.optimize import linear_sum_assignment
 
 try:
     from mmdet.apis import inference_detector, init_detector
@@ -200,11 +200,11 @@ def pose_tracking(pose_results, max_tracks=2, thre=30):
         track_proposals = [t for t in tracks if t['data'][-1][0] > idx - thre]
         n, m = len(track_proposals), len(poses)
         scores = np.zeros((n, m))
-        
+
         for i in range(n):
             for j in range(m):
-                scores[i][j] = dist_ske(track_proposals[i]['data'][-1][1], poses[j]) 
-                
+                scores[i][j] = dist_ske(track_proposals[i]['data'][-1][1], poses[j])
+
         row, col = linear_sum_assignment(scores)
         for r, c in zip(row, col):
             track_proposals[r]['data'].append((idx, poses[c]))
@@ -213,7 +213,7 @@ def pose_tracking(pose_results, max_tracks=2, thre=30):
                 if j not in col:
                     num_tracks += 1
                     new_track = dict(data=[])
-                    new_track['track_id'] = num_tracks 
+                    new_track['track_id'] = num_tracks
                     new_track['data'] = [(idx, poses[j])]
                     tracks.append(new_track)
     tracks.sort(key=lambda x: -len(x['data']))
@@ -234,13 +234,13 @@ def main():
     h, w, _ = original_frames[0].shape
 
     config = mmcv.Config.fromfile(args.config)
-    # Are we using GCN for Infernece? 
+    # Are we using GCN for Infernece?
     GCN_flag = 'GCN' in config.model.type
     GCN_nperson = None
     if GCN_flag:
         format_op = [op for op in config.data.test.pipeline if op['type'] == 'FormatGCNInput'][0]
         GCN_nperson = format_op['num_person']
-    
+
     model = init_recognizer(config, args.checkpoint, args.device)
 
     # Load label_map
@@ -275,7 +275,7 @@ def main():
         keypoint = np.zeros((num_person, num_frame, num_keypoint, 2),
                             dtype=np.float16)
         keypoint_score = np.zeros((num_person, num_frame, num_keypoint),
-                                dtype=np.float16)
+                                  dtype=np.float16)
         for i, poses in enumerate(pose_results):
             for j, pose in enumerate(poses):
                 pose = pose['keypoints']
