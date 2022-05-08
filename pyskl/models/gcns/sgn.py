@@ -69,33 +69,34 @@ class SGN(nn.Module):
 
     def forward(self, joint):
         N, M, T, V, C = joint.shape
-        assert M == 1
-        joint = joint.squeeze(1).permute(0, 3, 2, 1).contiguous()
-        # N, C, V, T
-        motion = torch.diff(joint, dim=3, append=torch.zeros(N, C, V, 1).to(joint.device))
-        joint = self.joint_bn(joint.view(N, C * V, T))
-        motion = self.motion_bn(motion.view(N, C * V, T))
-        joint = joint.view(N, C, V, T).permute(0, 1, 3, 2).contiguous()
-        motion = motion.view(N, C, V, T).permute(0, 1, 3, 2).contiguous()
+
+        joint = joint.reshape(N * M, T, V, C)
+        joint = joint.permute(0, 3, 2, 1).contiguous()
+        # NM, C, V, T
+        motion = torch.diff(joint, dim=3, append=torch.zeros(N * M, C, V, 1).to(joint.device))
+        joint = self.joint_bn(joint.view(N * M, C * V, T))
+        motion = self.motion_bn(motion.view(N * M, C * V, T))
+        joint = joint.view(N * M, C, V, T).permute(0, 1, 3, 2).contiguous()
+        motion = motion.view(N * M, C, V, T).permute(0, 1, 3, 2).contiguous()
 
         joint_embed = self.joint_embed(joint)
         motion_embed = self.motion_embed(motion)
-        # N, C, T, V
+        # N * M, C, T, V
         t_code = torch.eye(T).to(joint.device)
-        t_code = t_code[None, :, None].repeat(N, 1, V, 1)
+        t_code = t_code[None, :, None].repeat(N * M, 1, V, 1)
         s_code = torch.eye(V).to(joint.device)
-        s_code = s_code[None, ...,  None].repeat(N, 1, 1, T)
+        s_code = s_code[None, ...,  None].repeat(N * M, 1, 1, T)
         t_embed = self.t_embed(t_code).permute(0, 1, 3, 2).contiguous()
         s_embed = self.s_embed(s_code).permute(0, 1, 3, 2).contiguous()
 
         x = torch.cat([joint_embed + motion_embed, s_embed], 1)
-        # N, 2base, V, T
+        # N * M, 2base, V, T
         A = self.compute_A(x)
-        # N, T, V, V
+        # N * M, T, V, V
         for gcn in [self.gcn1, self.gcn2, self.gcn3]:
             x = gcn(x, A)
 
         x = x + t_embed
         x = self.tcn(x)
-        # N, 1, C, T, V
-        return x[:, None]
+        # N * M, C, T, V
+        return x.reshape((N, M) + x.shape[1:])
