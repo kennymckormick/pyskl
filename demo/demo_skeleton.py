@@ -154,8 +154,8 @@ def detection_inference(args, frame_paths):
         list[np.ndarray]: The human detection results.
     """
     model = init_detector(args.det_config, args.det_checkpoint, args.device)
-    assert model.CLASSES[0] == 'person', ('We require you to use a detector '
-                                          'trained on COCO')
+    assert model is not None, 'Failed to build the detection model. Check if you have installed mmcv-full properly.'
+    assert model.CLASSES[0] == 'person', 'We require you to use a detector trained on COCO'
     results = []
     print('Performing Human Detection for each frame')
     prog_bar = mmcv.ProgressBar(len(frame_paths))
