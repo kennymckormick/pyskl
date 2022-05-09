@@ -21,6 +21,9 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
 - [x] ST-GCN (AAAI 2018): https://arxiv.org/abs/1801.07455 [[MODELZOO](/configs/stgcn/README.md)]
 - [x] ST-GCN++ (PYSKL): [Tech Report Coming Soon](https://github.com/kennymckormick/pyskl/tree/main/configs/stgcn%2B%2B) [[MODELZOO](/configs/stgcn++/README.md)]
 - [x] PoseConv3D (CVPR 2022 Oral): https://arxiv.org/abs/2104.13586 [[MODELZOO](/configs/posec3d/README.md)]
+- [x] AAGCN (TIP): https://arxiv.org/abs/1912.06971 [[MODELZOO](/configs/aagcn/README.md)]
+- [x] MS-G3D (CVPR 2020 Oral): https://arxiv.org/abs/2003.14111 [[MODELZOO](/configs/msg3d/README.md)]
+- [x] CTR-GCN (ICCV 2021): https://arxiv.org/abs/2107.12213 [[MODELZOO](/configs/ctrgcn/README.md)]
 
 ## Supported Skeleton Datasets
 
