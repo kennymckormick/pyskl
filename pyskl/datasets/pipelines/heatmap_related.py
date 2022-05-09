@@ -290,6 +290,8 @@ class Heatmap2Potion:
 
         C = self.C
         heatmaps = heatmaps.reshape((-1, clip_len) + heatmaps.shape[1:])
+        # num_clip, clip_len, C, H, W
+        heatmaps = heatmaps.transpose(0, 1, 3, 4, 2)
 
         # t in {0, 1, 2, ..., clip_len - 1}
         def idx2color(t):
