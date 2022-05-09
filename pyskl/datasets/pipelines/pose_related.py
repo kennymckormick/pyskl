@@ -94,6 +94,74 @@ class RandomRot:
 
 
 @PIPELINES.register_module()
+class RandomScale:
+
+    def __init__(self, scale=0.2):
+        assert isinstance(scale, tuple) or isinstance(scale, float)
+        self.scale = scale
+
+    def __call__(self, results):
+        skeleton = results['keypoint']
+        scale = self.scale
+        if isinstance(scale, float):
+            scale = (scale, ) * skeleton.shape[-1]
+        assert len(scale) == skeleton.shape[-1]
+        scale = 1 + np.random.uniform(-1, 1, size=len(scale)) * np.array(scale)
+        results['keypoint'] = skeleton * scale
+        return results
+
+
+@PIPELINES.register_module()
+class RandomGaussianNoise:
+
+    def __init__(self, sigma=0.01, base='frame', shared=False):
+        assert isinstance(sigma, float)
+        self.sigma = sigma
+        self.base = base
+        self.shared = shared
+        assert self.base in ['frame', 'video']
+        if self.base == 'frame':
+            assert not self.shared
+
+    def __call__(self, results):
+        skeleton = results['keypoint']
+        M, T, V, C = skeleton.shape
+        skeleton = skeleton.reshape(-1, V, C)
+        ske_min, ske_max = skeleton.min(axis=1), skeleton.max(axis=1)
+        # MT * C
+        flag = ((ske_min ** 2).sum(axis=1) > EPS)
+        # MT
+        if self.base == 'frame':
+            norm = np.linalg.norm(ske_max - ske_min, axis=1) * flag
+            # MT
+        elif self.base == 'video':
+            assert np.sum(flag)
+            ske_min, ske_max = ske_min[flag].min(axis=0), ske_max[flag].max(axis=0)
+            # C
+            norm = np.linalg.norm(ske_max - ske_min)
+            norm = np.array([norm] * (M * T)) * flag
+        # MT * V
+        if self.shared:
+            noise = np.random.randn(V) * self.sigma
+            noise = np.stack([noise] * (M * T))
+            noise = (noise.T * norm).T
+            random_vec = np.random.uniform(-1, 1, size=(C, V))
+            random_vec = random_vec / np.linalg.norm(random_vec, axis=0)
+            random_vec = np.concatenate([random_vec] * (M * T), axis=-1)
+        else:
+            noise = np.random.randn(M * T, V) * self.sigma
+            noise = (noise.T * norm).T
+            random_vec = np.random.uniform(-1, 1, size=(C, M * T * V))
+            random_vec = random_vec / np.linalg.norm(random_vec, axis=0)
+            # C * MTV
+        random_vec = random_vec * noise.reshape(-1)
+        # C * MTV
+        random_vec = (random_vec.T).reshape(M, T, V, C)
+        results['keypoint'] = skeleton.reshape(M, T, V, C) + random_vec
+        return results
+
+
+@PIPELINES.register_module()
 class PreNormalize3D:
     """PreNormalize for NTURGB+D 3D keypoints (x, y, z). Codes adapted from https://github.com/lshiwjx/2s-AGCN. """
 

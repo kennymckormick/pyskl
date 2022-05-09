@@ -21,13 +21,6 @@ class STGCNBlock(nn.Module):
                  residual=True,
                  **kwargs):
         super().__init__()
-        # prepare kwargs for gcn and tcn
-        common_args = ['norm']
-        for arg in common_args:
-            if arg in kwargs:
-                value = kwargs.pop(arg)
-                kwargs['tcn_' + arg] = value
-                kwargs['gcn_' + arg] = value
 
         gcn_kwargs = {k[4:]: v for k, v in kwargs.items() if k[:4] == 'gcn_'}
         tcn_kwargs = {k[4:]: v for k, v in kwargs.items() if k[:4] == 'tcn_'}
@@ -68,12 +61,12 @@ class STGCN(nn.Module):
                  graph_cfg,
                  in_channels=3,
                  base_channels=64,
+                 data_bn_type='VC',
                  ch_ratio=2,
+                 num_person=2,  # * Only used when data_bn_type == 'MVC'
                  num_stages=10,
                  inflate_stages=[5, 8],
                  down_stages=[5, 8],
-                 data_bn_type='VC',
-                 num_person=2,  # * Only used when data_bn_type == 'MVC'
                  pretrained=None,
                  **kwargs):
         super().__init__()
@@ -111,12 +104,11 @@ class STGCN(nn.Module):
         for i in range(2, num_stages + 1):
             stride = 1 + (i in down_stages)
             in_channels = base_channels
-            res_channels = 0
             if i in inflate_stages:
                 inflate_times += 1
             out_channels = int(self.base_channels * self.ch_ratio ** inflate_times + EPS)
             base_channels = out_channels
-            modules.append(STGCNBlock(in_channels + res_channels, out_channels, A.clone(), stride, **lw_kwargs[i - 1]))
+            modules.append(STGCNBlock(in_channels, out_channels, A.clone(), stride, **lw_kwargs[i - 1]))
 
         if self.in_channels == self.base_channels:
             num_stages -= 1

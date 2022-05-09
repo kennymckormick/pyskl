@@ -74,6 +74,12 @@ def main():
     rank, world_size = get_dist_info()
     cfg.gpu_ids = range(world_size)
 
+    auto_resume = cfg.get('auto_resume', True)
+    if auto_resume and cfg.get('resume_from', None) is None:
+        resume_pth = osp.join(cfg.work_dir, 'latest.pth')
+        if osp.exists(resume_pth):
+            cfg.resume_from = resume_pth
+
     # create work_dir
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
     # dump config
