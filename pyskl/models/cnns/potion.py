@@ -1,7 +1,7 @@
 from mmcv.cnn import ConvModule, constant_init, kaiming_init
 from torch import nn
 
-from ..registry import BACKBONES
+from ..builder import BACKBONES
 
 
 @BACKBONES.register_module()
