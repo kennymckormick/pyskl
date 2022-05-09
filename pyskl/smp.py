@@ -125,4 +125,5 @@ def gen_bash(cfgs, num_gpus, gpus_per_task=1):
                 f'CUDA_VISIBLE_DEVICES={gpu_ids} PORT={port} bash tools/dist_train.sh {c} {gpus_per_task} '
                 '--validate --test-last --test-best'
             )
-        mwlines(cmds, f'train_{i}.sh')
+        timestamp = time.strftime('%m%d%H%M%S', time.localtime())
+        mwlines(cmds, f'train_{timestamp}_{i}.sh')

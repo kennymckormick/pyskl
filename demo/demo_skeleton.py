@@ -9,6 +9,7 @@ import cv2
 import mmcv
 import numpy as np
 import torch
+from scipy.optimize import linear_sum_assignment
 
 from pyskl.apis import inference_recognizer, init_recognizer
 
@@ -61,14 +62,13 @@ def parse_args():
     parser.add_argument('out_filename', help='output filename')
     parser.add_argument(
         '--config',
-        default=('configs/posec3d/slowonly_r50_u48_240e_ntu120_xsub_keypoint.py'),
-        help='posec3d config file path')
+        default='configs/posec3d/slowonly_r50_ntu120_xsub/joint.py',
+        help='skeleton action recognition config file path')
     parser.add_argument(
         '--checkpoint',
-        default=('https://download.openmmlab.com/mmaction/skeleton/posec3d/'
-                 'slowonly_r50_u48_240e_ntu120_xsub_keypoint/'
-                 'slowonly_r50_u48_240e_ntu120_xsub_keypoint-6736b03f.pth'),
-        help='posec3d checkpoint file/url')
+        default=('https://download.openmmlab.com/mmaction/pyskl/ckpt/'
+                 'posec3d/slowonly_r50_ntu120_xsub/joint.pth'),
+        help='skeleton action recognition checkpoint file/url')
     parser.add_argument(
         '--det-config',
         default='demo/faster_rcnn_r50_fpn_2x_coco.py',
@@ -76,8 +76,7 @@ def parse_args():
     parser.add_argument(
         '--det-checkpoint',
         default=('http://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/'
-                 'faster_rcnn_r50_fpn_2x_coco/'
-                 'faster_rcnn_r50_fpn_2x_coco_'
+                 'faster_rcnn_r50_fpn_2x_coco/faster_rcnn_r50_fpn_2x_coco_'
                  'bbox_mAP-0.384_20200504_210434-a5d8aa15.pth'),
         help='human detection checkpoint file/url')
     parser.add_argument(
@@ -96,7 +95,7 @@ def parse_args():
         help='the threshold of human detection score')
     parser.add_argument(
         '--label-map',
-        default='tools/data/skeleton/label_map_ntu120.txt',
+        default='tools/data/label_map/nturgbd_120.txt',
         help='label map file')
     parser.add_argument(
         '--device', type=str, default='cuda:0', help='CPU/CUDA device option')
@@ -155,8 +154,8 @@ def detection_inference(args, frame_paths):
         list[np.ndarray]: The human detection results.
     """
     model = init_detector(args.det_config, args.det_checkpoint, args.device)
-    assert model.CLASSES[0] == 'person', ('We require you to use a detector '
-                                          'trained on COCO')
+    assert model is not None, 'Failed to build the detection model. Check if you have installed mmcv-full properly.'
+    assert model.CLASSES[0] == 'person', 'We require you to use a detector trained on COCO'
     results = []
     print('Performing Human Detection for each frame')
     prog_bar = mmcv.ProgressBar(len(frame_paths))
@@ -184,6 +183,48 @@ def pose_inference(args, frame_paths, det_results):
     return ret
 
 
+def dist_ske(ske1, ske2):
+    dist = np.linalg.norm(ske1[:, :2] - ske2[:, :2], axis=1) * 2
+    diff = np.abs(ske1[:, 2] - ske2[:, 2])
+    return np.sum(np.maximum(dist, diff))
+
+
+def pose_tracking(pose_results, max_tracks=2, thre=30):
+    tracks, num_tracks = [], 0
+    num_joints = None
+    for idx, poses in enumerate(pose_results):
+        if len(poses) == 0:
+            continue
+        if num_joints is None:
+            num_joints = poses[0].shape[0]
+        track_proposals = [t for t in tracks if t['data'][-1][0] > idx - thre]
+        n, m = len(track_proposals), len(poses)
+        scores = np.zeros((n, m))
+
+        for i in range(n):
+            for j in range(m):
+                scores[i][j] = dist_ske(track_proposals[i]['data'][-1][1], poses[j])
+
+        row, col = linear_sum_assignment(scores)
+        for r, c in zip(row, col):
+            track_proposals[r]['data'].append((idx, poses[c]))
+        if m > n:
+            for j in range(m):
+                if j not in col:
+                    num_tracks += 1
+                    new_track = dict(data=[])
+                    new_track['track_id'] = num_tracks
+                    new_track['data'] = [(idx, poses[j])]
+                    tracks.append(new_track)
+    tracks.sort(key=lambda x: -len(x['data']))
+    result = np.zeros((max_tracks, len(pose_results), num_joints, 3), dtype=np.float16)
+    for i, track in enumerate(tracks[:max_tracks]):
+        for item in track['data']:
+            idx, pose = item
+            result[i, idx] = pose
+    return result[..., :2], result[..., 2]
+
+
 def main():
     args = parse_args()
 
@@ -192,8 +233,13 @@ def main():
     num_frame = len(frame_paths)
     h, w, _ = original_frames[0].shape
 
-    # Get clip_len, frame_interval and calculate center index of each clip
     config = mmcv.Config.fromfile(args.config)
+    # Are we using GCN for Infernece?
+    GCN_flag = 'GCN' in config.model.type
+    GCN_nperson = None
+    if GCN_flag:
+        format_op = [op for op in config.data.test.pipeline if op['type'] == 'FormatGCNInput'][0]
+        GCN_nperson = format_op['num_person']
 
     model = init_recognizer(config, args.checkpoint, args.device)
 
@@ -215,20 +261,28 @@ def main():
         start_index=0,
         modality='Pose',
         total_frames=num_frame)
-    num_person = max([len(x) for x in pose_results])
-    # Current PoseC3D models are trained on COCO-keypoints (17 keypoints)
-    num_keypoint = 17
-    keypoint = np.zeros((num_person, num_frame, num_keypoint, 2),
-                        dtype=np.float16)
-    keypoint_score = np.zeros((num_person, num_frame, num_keypoint),
-                              dtype=np.float16)
-    for i, poses in enumerate(pose_results):
-        for j, pose in enumerate(poses):
-            pose = pose['keypoints']
-            keypoint[j, i] = pose[:, :2]
-            keypoint_score[j, i] = pose[:, 2]
-    fake_anno['keypoint'] = keypoint
-    fake_anno['keypoint_score'] = keypoint_score
+
+    if GCN_flag:
+        # We will keep at most `GCN_nperson` persons per frame.
+        tracking_inputs = [[pose['keypoints'] for pose in poses] for poses in pose_results]
+        keypoint, keypoint_score = pose_tracking(tracking_inputs, max_tracks=GCN_nperson)
+        fake_anno['keypoint'] = keypoint
+        fake_anno['keypoint_score'] = keypoint_score
+    else:
+        num_person = max([len(x) for x in pose_results])
+        # Current PoseC3D models are trained on COCO-keypoints (17 keypoints)
+        num_keypoint = 17
+        keypoint = np.zeros((num_person, num_frame, num_keypoint, 2),
+                            dtype=np.float16)
+        keypoint_score = np.zeros((num_person, num_frame, num_keypoint),
+                                  dtype=np.float16)
+        for i, poses in enumerate(pose_results):
+            for j, pose in enumerate(poses):
+                pose = pose['keypoints']
+                keypoint[j, i] = pose[:, :2]
+                keypoint_score[j, i] = pose[:, 2]
+        fake_anno['keypoint'] = keypoint
+        fake_anno['keypoint_score'] = keypoint_score
 
     results = inference_recognizer(model, fake_anno)
 

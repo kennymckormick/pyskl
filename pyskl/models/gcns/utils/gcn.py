@@ -281,3 +281,18 @@ class unit_ctrgcn(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 bn_init(m, 1)
         bn_init(self.bn, 1e-6)
+
+
+class unit_sgn(nn.Module):
+    def __init__(self, in_channels, out_channels, bias=False):
+        super().__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
+        self.residual = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU()
+
+    def forward(self, x, A):
+        # x: N, C, T, V; A: N, T, V, V
+        x1 = x.permute(0, 2, 3, 1).contiguous()
+        x1 = A.matmul(x1).permute(0, 3, 1, 2).contiguous()
+        return self.relu(self.bn(self.conv(x1) + self.residual(x)))

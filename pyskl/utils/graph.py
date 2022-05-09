@@ -147,3 +147,7 @@ class Graph:
         Out = normalize_digraph(edge2mat(self.outward, self.num_node))
         A = np.stack((Iden, In, Out))
         return A
+
+    def binary_adj(self):
+        A = edge2mat(self.inward + self.outward, self.num_node)
+        return A[None]

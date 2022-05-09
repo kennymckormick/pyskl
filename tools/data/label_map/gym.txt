@@ -1,0 +1,99 @@
+(VT) round-off, flic-flac with 0.5 turn on, stretched salto forward with 0.5 turn off
+(VT) round-off, flic-flac on, stretched salto backward with 2 turn off
+(VT) round-off, flic-flac on, stretched salto backward with 1 turn off
+(VT) round-off, flic-flac on, stretched salto backward with 1.5 turn off
+(VT) round-off, flic-flac on, stretched salto backward with 2.5 turn off
+(VT) round-off, flic-flac on, stretched salto backward off
+(FX) switch leap with 0.5 turn
+(FX) switch leap with 1 turn
+(FX) split leap with 1 turn
+(FX) split leap with 1.5 turn or more
+(FX) switch leap (leap forward with leg change to cross split)
+(FX) split jump with 1 turn
+(FX) split jump (leg separation 180 degree parallel to the floor)
+(FX) johnson with additional 0.5 turn
+(FX) straddle pike or side split jump with 1 turn
+(FX) switch leap to ring position
+(FX) stag jump
+(FX) 2 turn with free leg held upward in 180 split position throughout turn
+(FX) 2 turn in tuck stand on one leg, free leg straight throughout turn
+(FX) 3 turn on one leg, free leg optional below horizontal
+(FX) 2 turn on one leg, free leg optional below horizontal
+(FX) 1 turn on one leg, free leg optional below horizontal
+(FX) 2 turn or more with heel of free leg forward at horizontal throughout turn
+(FX) 1 turn with heel of free leg forward at horizontal throughout turn
+(FX) arabian double salto tucked
+(FX) salto forward tucked
+(FX) aerial walkover forward
+(FX) salto forward stretched with 2 twist
+(FX) salto forward stretched with 1 twist
+(FX) salto forward stretched with 1.5 twist
+(FX) salto forward stretched, feet land together
+(FX) double salto backward stretched
+(FX) salto backward stretched with 3 twist
+(FX) salto backward stretched with 2 twist
+(FX) salto backward stretched with 2.5 twist
+(FX) salto backward stretched with 1.5 twist
+(FX) double salto backward tucked with 2 twist
+(FX) double salto backward tucked with 1 twist
+(FX) double salto backward tucked
+(FX) double salto backward piked with 1 twist
+(FX) double salto backward piked
+(BB) sissone (leg separation 180 degree on the diagonal to the floor, take off two feet, land on one foot)
+(BB) split jump with 0.5 turn in side position
+(BB) split jump
+(BB) straddle pike jump or side split jump
+(BB) split ring jump (ring jump with front leg horizontal to the floor)
+(BB) switch leap with 0.5 turn
+(BB) switch leap (leap forward with leg change)
+(BB) split leap forward
+(BB) johnson (leap forward with leg change and 0.25 turn to side split or straddle pike position)
+(BB) switch leap to ring position
+(BB) sheep jump (jump with upper back arch and head release with feet to head height/closed Ring)
+(BB) wolf hop or jump (hip angle at 45, knees together)
+(BB) 1 turn with heel of free leg forward at horizontal throughout turn
+(BB) 2 turn on one leg, free leg optional below horizontal
+(BB) 1 turn on one leg, free leg optional below horizontal
+(BB) 2 turn in tuck stand on one leg, free leg optional
+(BB) salto backward tucked with 1 twist
+(BB) salto backward tucked
+(BB) salto backward stretched-step out (feet land successively)
+(BB) salto backward stretched with legs together
+(BB) salto sideward tucked, take off from one leg to side stand
+(BB) free aerial cartwheel landing in cross position
+(BB) salto forward tucked to cross stand
+(BB) free aerial walkover forward, landing on one or both feet
+(BB) jump backward, flic-flac take-off with 0.5 twist through handstand to walkover forward, also with support on one arm
+(BB) flic-flac to land on both feet
+(BB) flic-flac with step-out, also with support on one arm
+(BB) round-off
+(BB) double salto backward tucked
+(BB) salto backward tucked
+(BB) double salto backward piked
+(BB) salto backward stretched with 2 twist
+(BB) salto backward stretched with 2.5 twist
+(UB) pike sole circle backward with 1 turn to handstand
+(UB) pike sole circle backward with 0.5 turn to handstand
+(UB) pike sole circle backward to handstand
+(UB) giant circle backward with 1 turn to handstand
+(UB) giant circle backward with 0.5 turn to handstand
+(UB) giant circle backward
+(UB) giant circle forward with 1 turn on one arm before handstand phase
+(UB) giant circle forward with 0.5 turn to handstand
+(UB) giant circle forward
+(UB) clear hip circle backward to handstand
+(UB) clear pike circle backward with 1 turn to handstand
+(UB) clear pike circle backward with 0.5 turn to handstand
+(UB) clear pike circle backward to handstand
+(UB) stalder backward with 1 turn to handstand
+(UB) stalder backward to handstand
+(UB) counter straddle over high bar to hang
+(UB) counter piked over high bar to hang
+(UB) (swing backward or front support) salto forward straddled to hang on high bar
+(UB) (swing backward) salto forward piked to hang on high bar
+(UB) (swing forward or hip circle backward) salto backward with 0.5 turn piked to hang on high bar
+(UB) transition flight from high bar to low bar
+(UB) transition flight from low bar to high bar
+(UB) (swing forward) double salto backward tucked with 1 turn
+(UB) (swing backward) double salto forward tucked
+(UB) (swing forward) double salto backward stretched
