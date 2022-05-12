@@ -69,7 +69,7 @@ class RandomRot:
     def __init__(self, theta=0.3):
         self.theta = theta
 
-    def _rot(self, theta):
+    def _rot3d(self, theta):
         cos, sin = np.cos(theta), np.sin(theta)
         rx = np.array([[1, 0, 0], [0, cos[0], sin[0]], [0, -sin[0], cos[0]]])
         ry = np.array([[cos[1], 0, -sin[1]], [0, 1, 0], [sin[1], 0, cos[1]]])
@@ -78,18 +78,26 @@ class RandomRot:
         rot = np.matmul(rz, np.matmul(ry, rx))
         return rot
 
-    def __call__(self, results):
-        theta = np.random.uniform(-self.theta, self.theta, size=3)
-        rot_mat = self._rot(theta)
+    def _rot2d(self, theta):
+        cos, sin = np.cos(theta), np.sin(theta)
+        return np.array([[cos, -sin], [sin, cos]])
 
+    def __call__(self, results):
         skeleton = results['keypoint']
+        M, T, V, C = skeleton.shape
+
         if np.all(np.isclose(skeleton, 0)):
             return results
 
-        M, T, V, C = skeleton.shape
-        assert M in [1, 2] and C == 3
-
+        assert C in [2, 3]
+        if C == 3:
+            theta = np.random.uniform(-self.theta, self.theta, size=3)
+            rot_mat = self._rot3d(theta)
+        elif C == 2:
+            theta = np.random.uniform(-self.theta)
+            rot_mat = self._rot2d(theta)
         results['keypoint'] = np.einsum('ab,mtvb->mtva', rot_mat, skeleton)
+
         return results
 
 
