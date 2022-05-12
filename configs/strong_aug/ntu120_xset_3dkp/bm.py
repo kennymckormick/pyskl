@@ -14,7 +14,7 @@ train_pipeline = [
     dict(type='PreNormalize3D'),
     dict(type='RandomScale', scale=0.1),
     dict(type='RandomRot'),
-    dict(type='GenSkeFeat', dataset='nturgb+d', feats=['j']),
+    dict(type='GenSkeFeat', dataset='nturgb+d', feats=['bm']),
     dict(type='UniformSample', clip_len=100),
     dict(type='PoseDecode'),
     dict(type='FormatGCNInput', num_person=2),
@@ -23,7 +23,7 @@ train_pipeline = [
 ]
 val_pipeline = [
     dict(type='PreNormalize3D'),
-    dict(type='GenSkeFeat', dataset='nturgb+d', feats=['j']),
+    dict(type='GenSkeFeat', dataset='nturgb+d', feats=['bm']),
     dict(type='UniformSample', clip_len=100, num_clips=1, test_mode=True),
     dict(type='PoseDecode'),
     dict(type='FormatGCNInput', num_person=2),
@@ -32,7 +32,7 @@ val_pipeline = [
 ]
 test_pipeline = [
     dict(type='PreNormalize3D'),
-    dict(type='GenSkeFeat', dataset='nturgb+d', feats=['j']),
+    dict(type='GenSkeFeat', dataset='nturgb+d', feats=['bm']),
     dict(type='UniformSample', clip_len=100, num_clips=10, test_mode=True),
     dict(type='PoseDecode'),
     dict(type='FormatGCNInput', num_person=2),
@@ -62,4 +62,4 @@ log_config = dict(interval=100, hooks=[dict(type='TextLoggerHook')])
 
 # runtime settings
 log_level = 'INFO'
-work_dir = './work_dirs/strong_aug/ntu120_xset_3dkp/j'
+work_dir = './work_dirs/strong_aug/ntu120_xset_3dkp/bm'

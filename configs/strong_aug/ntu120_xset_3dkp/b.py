@@ -62,4 +62,4 @@ log_config = dict(interval=100, hooks=[dict(type='TextLoggerHook')])
 
 # runtime settings
 log_level = 'INFO'
-work_dir = './work_dirs/mixaug_120e/ntu120_xset_3dkp/b'
+work_dir = './work_dirs/strong_aug/ntu120_xset_3dkp/b'
