@@ -40,8 +40,8 @@ test_pipeline = [
     dict(type='ToTensor', keys=['keypoint'])
 ]
 data = dict(
-    videos_per_gpu=128,
-    workers_per_gpu=8,
+    videos_per_gpu=16,
+    workers_per_gpu=2,
     test_dataloader=dict(videos_per_gpu=1),
     train=dict(
         type='RepeatDataset',
