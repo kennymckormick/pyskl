@@ -42,7 +42,7 @@ We provide links to the pre-processed skeleton annotations, you can directly dow
 - Diving48 [2D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/diving48/diving48_hrnet.pkl
 - Kinetics400 [2D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/k400/k400_hrnet.pkl (Table of contents only, no skeleton annotations)
 
-For Kinetics400, since the skeleton annotations are large, we do not provide the direct download links on aliyun. Please use the following link to download the `kpfiles` and extract it under `$PYSKL/data/k400` for Kinetics-400 training & testing: https://www.myqnapcloud.com/smartshare/7391h8k8n2opo672v58122cc_6IIhGiT
+For Kinetics400, since the skeleton annotations are large, we do not provide the direct download links on aliyun. Please use the following link to download the `kpfiles` and extract it under `$PYSKL/data/k400` for Kinetics-400 training & testing: https://mycuhk-my.sharepoint.com/:u:/g/personal/1155136485_link_cuhk_edu_hk/EeyDCVskqLtClMVVwqD53acBF2FEwkctp3vtRbkLfnKSTw?e=B3SZlM
 
 Here are the BibTex items for each dataset:
 
