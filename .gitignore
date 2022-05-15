@@ -106,6 +106,7 @@ venv.bak/
 *.log.json
 benchlist.txt
 work_dirs/
+.cache/
 
 # Pytorch
 *.pth

@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from mmcv.runner import load_checkpoint
 
-from ...utils import Graph
+from ...utils import Graph, cache_checkpoint
 from ..builder import BACKBONES
 from .utils import mstcn, unit_gcn, unit_tcn
 
@@ -119,6 +119,7 @@ class STGCN(nn.Module):
 
     def init_weights(self):
         if isinstance(self.pretrained, str):
+            self.pretrained = cache_checkpoint(self.pretrained)
             load_checkpoint(self, self.pretrained, strict=False)
 
     def forward(self, x):

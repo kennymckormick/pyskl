@@ -12,7 +12,7 @@ from mmcv.runner import DistSamplerSeedHook, EpochBasedRunner, OptimizerHook, bu
 
 from ..core import DistEvalHook
 from ..datasets import build_dataloader, build_dataset
-from ..utils import get_root_logger
+from ..utils import cache_checkpoint, get_root_logger
 
 
 def init_random_seed(seed=None, device='cuda'):
@@ -139,6 +139,7 @@ def train_model(model,
     if cfg.get('resume_from', None):
         runner.resume(cfg.resume_from)
     elif cfg.get('load_from', None):
+        cfg.load_from = cache_checkpoint(cfg.load_from)
         runner.load_checkpoint(cfg.load_from)
 
     runner.run(data_loaders, cfg.workflow, cfg.total_epochs)

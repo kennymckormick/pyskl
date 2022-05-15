@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # flake8: noqa: E722
+import hashlib
 import logging
 import multiprocessing as mp
 import os
@@ -8,6 +9,8 @@ import socket
 
 from mmcv import load
 from mmcv.utils import get_logger
+
+from ..smp import download_file
 
 
 def mc_on(port=22077, launcher='pytorch', size=24000):
@@ -83,3 +86,16 @@ def get_root_logger(log_file=None, log_level=logging.INFO):
         :obj:`logging.Logger`: The root logger.
     """
     return get_logger(__name__.split('.')[0], log_file, log_level)
+
+
+def cache_checkpoint(filename, cache_dir='.cache'):
+    if filename.startswith('http://') or filename.startswith('https://'):
+        url = filename.split('//')[1]
+        basename = filename.split('/')[-1]
+        filehash = hashlib.md5(url.encode('utf8')).hexdigest()[-8:]
+        os.makedirs(cache_dir, exist_ok=True)
+        local_pth = osp.join(cache_dir, basename.replace('.pth', f'_{filehash}.pth'))
+        if not osp.exists(local_pth):
+            download_file(filename, local_pth)
+        filename = local_pth
+    return filename

@@ -14,6 +14,7 @@ from mmcv.runner import load_checkpoint
 from pyskl.core import OutputHook
 from pyskl.datasets.pipelines import Compose
 from pyskl.models import build_recognizer
+from pyskl.utils import cache_checkpoint
 
 
 def init_recognizer(config, checkpoint=None, device='cuda:0', **kwargs):
@@ -46,6 +47,7 @@ def init_recognizer(config, checkpoint=None, device='cuda:0', **kwargs):
     model = build_recognizer(config.model)
 
     if checkpoint is not None:
+        checkpoint = cache_checkpoint(checkpoint)
         load_checkpoint(model, checkpoint, map_location='cpu')
     model.cfg = config
     model.to(device)
