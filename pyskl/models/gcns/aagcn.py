@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from mmcv.runner import load_checkpoint
 
-from ...utils import Graph
+from ...utils import Graph, cache_checkpoint
 from ..builder import BACKBONES
 from .utils import bn_init, mstcn, unit_aagcn, unit_tcn
 
@@ -111,6 +111,7 @@ class AAGCN(nn.Module):
         for module in self.gcn:
             module.init_weights()
         if isinstance(self.pretrained, str):
+            self.pretrained = cache_checkpoint(self.pretrained)
             load_checkpoint(self, self.pretrained, strict=False)
 
     def forward(self, x):

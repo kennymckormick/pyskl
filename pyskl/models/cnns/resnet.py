@@ -4,7 +4,7 @@ from mmcv.cnn import ConvModule, constant_init, kaiming_init
 from mmcv.runner import _load_checkpoint, load_checkpoint
 from mmcv.utils import _BatchNorm
 
-from ...utils import get_root_logger
+from ...utils import cache_checkpoint, get_root_logger
 from ..builder import BACKBONES
 
 
@@ -428,6 +428,7 @@ class ResNet(nn.Module):
             if self.torchvision_pretrain:
                 self._load_torchvision_checkpoint(logger)
             else:
+                self.pretrained = cache_checkpoint(self.pretrained)
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger)
 
     def forward(self, x):

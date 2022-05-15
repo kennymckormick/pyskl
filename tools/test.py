@@ -17,7 +17,7 @@ from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 
 from pyskl.datasets import build_dataloader, build_dataset
 from pyskl.models import build_model
-from pyskl.utils import mc_off, mc_on, test_port
+from pyskl.utils import cache_checkpoint, mc_off, mc_on, test_port
 
 
 def parse_args():
@@ -82,7 +82,9 @@ def inference_pytorch(args, cfg, data_loader):
     if args.checkpoint is None:
         work_dir = cfg.work_dir
         args.checkpoint = osp.join(work_dir, 'latest.pth')
+        assert osp.exists(args.checkpoint)
 
+    args.checkpoint = cache_checkpoint(args.checkpoint)
     load_checkpoint(model, args.checkpoint, map_location='cpu')
 
     if args.fuse_conv_bn:

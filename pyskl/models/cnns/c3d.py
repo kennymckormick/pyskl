@@ -3,7 +3,7 @@ import torch.nn as nn
 from mmcv.cnn import ConvModule, kaiming_init
 from mmcv.runner import load_checkpoint
 
-from ...utils import get_root_logger
+from ...utils import cache_checkpoint, get_root_logger
 from ..builder import BACKBONES
 
 
@@ -64,6 +64,7 @@ class C3D(nn.Module):
         if isinstance(self.pretrained, str):
             logger = get_root_logger()
             logger.info(f'load model from: {self.pretrained}')
+            self.pretrained = cache_checkpoint(self.pretrained)
             load_checkpoint(self, self.pretrained, strict=False, logger=logger)
 
     def forward(self, x):

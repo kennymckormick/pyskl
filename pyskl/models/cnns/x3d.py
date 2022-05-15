@@ -6,7 +6,7 @@ from mmcv.cnn import ConvModule, Swish, build_activation_layer, constant_init, k
 from mmcv.runner import load_checkpoint
 from mmcv.utils import _BatchNorm
 
-from ...utils import get_root_logger
+from ...utils import cache_checkpoint, get_root_logger
 from ..builder import BACKBONES
 
 
@@ -472,7 +472,7 @@ class X3D(nn.Module):
         if isinstance(self.pretrained, str):
             logger = get_root_logger()
             logger.info(f'load model from: {self.pretrained}')
-
+            self.pretrained = cache_checkpoint(self.pretrained)
             load_checkpoint(self, self.pretrained, strict=False, logger=logger)
 
     def forward(self, x):

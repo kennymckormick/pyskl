@@ -7,7 +7,7 @@ from mmcv.cnn import ConvModule, kaiming_init
 from mmcv.runner import _load_checkpoint, load_checkpoint
 from mmcv.utils import print_log
 
-from ...utils import get_root_logger
+from ...utils import cache_checkpoint, get_root_logger
 from ..builder import BACKBONES
 from .resnet3d import ResNet3d
 
@@ -279,6 +279,7 @@ class ResNet3dSlowFast(nn.Module):
             msg = f'load model from: {self.pretrained}'
             print_log(msg, logger=logger)
             # Directly load 3D model.
+            self.pretrained = cache_checkpoint(self.pretrained)
             load_checkpoint(self, self.pretrained, strict=True, logger=logger)
         elif self.pretrained is None:
             # Init two branch separately.

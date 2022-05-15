@@ -7,7 +7,7 @@ from mmcv.runner import _load_checkpoint, load_checkpoint
 from mmcv.utils import _BatchNorm
 from torch.nn.modules.utils import _ntuple, _triple
 
-from ...utils import get_root_logger
+from ...utils import cache_checkpoint, get_root_logger
 from ..builder import BACKBONES
 
 
@@ -587,6 +587,7 @@ class ResNet3d(nn.Module):
             if self.pretrained2d:
                 self.inflate_weights(logger)
             else:
+                self.pretrained = cache_checkpoint(self.pretrained)
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger)
 
     def init_weights(self, pretrained=None):
