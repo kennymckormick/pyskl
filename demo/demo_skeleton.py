@@ -234,6 +234,7 @@ def main():
     h, w, _ = original_frames[0].shape
 
     config = mmcv.Config.fromfile(args.config)
+    config.data.test.pipeline = [x for x in config.data.test.pipeline if x['type'] != 'DecompressPose']
     # Are we using GCN for Infernece?
     GCN_flag = 'GCN' in config.model.type
     GCN_nperson = None
