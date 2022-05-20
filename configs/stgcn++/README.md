@@ -2,16 +2,17 @@
 
 ## Introduction
 
-STGCN++ is a variant of STGCN we developed in PYSKL with some modifications in the architecture of the spatial module and the temporal module. We provide STGCN++ trained on NTURGB+D with 2D skeletons (HRNet) and 3D skeletons with **PYSKL** training setting. We provide checkpoints for four modalities: Joint, Bone, Joint Motion, and Bone Motion. We will describe the architecture of STGCN++ in the upcoming tech report.
+STGCN++ is a variant of STGCN we developed in PYSKL with some modifications in the architecture of the spatial module and the temporal module. We provide STGCN++ trained on NTURGB+D with 2D skeletons (HRNet) and 3D skeletons with **PYSKL** training setting. We provide checkpoints for four modalities: Joint, Bone, Joint Motion, and Bone Motion. The architecture of STGCN++ is described in PYSKL [tech report](https://arxiv.org/abs/2205.09443).
 
 ## Citation
 
 ```BibTeX
-@misc{duan2022pyskl,
-    title={PYSKL: a toolbox for skeleton-based video understanding},
-    author={PYSKL Contributors},
-    howpublished = {\url{https://github.com/kennymckormick/pyskl}},
-    year={2022}
+@misc{duan2022PYSKL,
+  url = {https://arxiv.org/abs/2205.09443},
+  author = {Duan, Haodong and Wang, Jiaqi and Chen, Kai and Lin, Dahua},
+  title = {PYSKL: Towards Good Practices for Skeleton Action Recognition},
+  publisher = {arXiv},
+  year = {2022}
 }
 ```
 
