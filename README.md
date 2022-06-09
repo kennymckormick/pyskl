@@ -53,6 +53,7 @@ pip install -e .
 ## Demonstration
 
 ```shell
+# Before running the demo, make sure you have installed mmcv-full, mmpose and mmdet. You should first install mmcv-full, and then install mmpose, mmdet. 
 # You should run the following scripts under the directory `$PYSKL`
 # Running the demo with PoseC3D trained on NTURGB+D 120 (Joint Modality), which is the default option. The input file is demo/ntu_sample.avi, the output file is demo/demo.mp4
 python demo/demo_skeleton.py demo/ntu_sample.avi demo/demo.mp4
