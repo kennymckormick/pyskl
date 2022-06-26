@@ -11,6 +11,11 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
   <p style="font-size:1.2vw;">Skeleton-base Action Recognition Results on NTU-RGB+D-120</p>
 </div>
 
+## Contributing
+
+PYSKL is an OpenSource Project under the Apache2 license. Any contribution from the community to improve PYSKL is appreciated. For **significant** contributions (like supporting a novel & important task), a corresponding part will be added to our updated tech report, while the contributor will also be added to the author list.
+
+Any user can open a PR to contribute to PYSKL. The PR will be reviewed before being merged into the master branch. If you want to open a **large** PR in PYSKL, you are recommended to first reach me (via my email dhd.efz@gmail.com) to discuss the design, which helps to save large amounts of time in the reviewing stage.
 
 ## News
 
