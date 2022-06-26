@@ -155,7 +155,7 @@ def detection_inference(args, frame_paths):
     """
     model = init_detector(args.det_config, args.det_checkpoint, args.device)
     assert model is not None, ('Failed to build the detection model. Check if you have installed mmcv-full properly. '
-                               'Note that you should first install mmcv-full successfully, then install mmdet, mmpose. ')
+                               'You should first install mmcv-full successfully, then install mmdet, mmpose. ')
     assert model.CLASSES[0] == 'person', 'We require you to use a detector trained on COCO'
     results = []
     print('Performing Human Detection for each frame')
