@@ -19,7 +19,7 @@ Any user can open a PR to contribute to PYSKL. The PR will be reviewed before be
 
 ## News
 
-- Release a [tech report](https://arxiv.org/abs/2205.09443) about this repository (**2022-05-20**).
+- The [tech report](https://arxiv.org/abs/2205.09443) of PYSKL is accepted by MM 2022 (**2022-06-28**).
 - Support spatial augmentations and provide a benchmark on ST-GCN++  (**2022-05-12**).
 - Support skeleton action recognition demo with GCN algorithms  (**2022-05-03**).
 - Release the skeleton annotations (HRNet 2D Pose), config files, and pre-trained ckpts for Kinetics-400. K400 is a large-scale dataset (even for skeleton), you should have `memcached` and `pymemcache` installed for efficient training & testing on K400 (**2022-05-01**).
