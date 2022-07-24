@@ -94,4 +94,4 @@ If you use PYSKL in your research or wish to refer to the baseline results publi
 ```
 
 ## Contact
-For any questions, feel free to contact: dh019@ie.cuhk.edu.hk
+For any questions, feel free to contact: dhd.efz@gmail.com
