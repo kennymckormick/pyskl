@@ -1,9 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import numpy as np
 import os
 import os.path as osp
 import time
-
-import numpy as np
 import torch
 import torch.distributed as dist
 from mmcv.engine import multi_gpu_test
@@ -70,7 +69,7 @@ def train_model(model,
         meta (dict | None): Meta dict to record some important information.
             Default: None
     """
-    logger = get_root_logger(log_level=cfg.log_level)
+    logger = get_root_logger(log_level=cfg.get('log_level', 'INFO'))
 
     # prepare data loaders
     dataset = dataset if isinstance(dataset, (list, tuple)) else [dataset]

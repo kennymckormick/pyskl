@@ -1,15 +1,14 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import mmcv
+import numpy as np
 import os
 import os.path as osp
 import re
-import warnings
-from operator import itemgetter
-
-import mmcv
-import numpy as np
 import torch
+import warnings
 from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
+from operator import itemgetter
 
 from pyskl.core import OutputHook
 from pyskl.datasets.pipelines import Compose

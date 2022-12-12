@@ -1,7 +1,6 @@
-import io
-
 import cv2
 import decord
+import io
 import matplotlib.pyplot as plt
 import moviepy.editor as mpy
 import numpy as np

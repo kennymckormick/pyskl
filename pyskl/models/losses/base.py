@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from abc import ABCMeta, abstractmethod
-
 import torch.nn as nn
+from abc import ABCMeta, abstractmethod
 
 
 class BaseWeightedLoss(nn.Module, metaclass=ABCMeta):

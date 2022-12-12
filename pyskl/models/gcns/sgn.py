@@ -1,5 +1,4 @@
 import math
-
 import torch
 from mmcv.cnn import ConvModule
 from torch import nn

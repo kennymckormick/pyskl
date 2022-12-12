@@ -1,14 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
-import os
-import os.path as osp
-import shutil
-import warnings
-
 import cv2
 import mmcv
 import numpy as np
+import os
+import os.path as osp
+import shutil
 import torch
+import warnings
 from scipy.optimize import linear_sum_assignment
 
 from pyskl.apis import inference_recognizer, init_recognizer
@@ -27,7 +26,7 @@ except (ImportError, ModuleNotFoundError):
     )
 
 try:
-    from mmpose.apis import init_pose_model, inference_top_down_pose_model, vis_pose_result
+    from mmpose.apis import inference_top_down_pose_model, init_pose_model, vis_pose_result
 except (ImportError, ModuleNotFoundError):
     def init_pose_model(*args, **kwargs):
         pass
