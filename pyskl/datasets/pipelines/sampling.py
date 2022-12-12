@@ -22,22 +22,18 @@ class UniformSampleFrames:
     Args:
         clip_len (int): Frames of each sampled output clip.
         num_clips (int): Number of clips to be sampled. Default: 1.
-        test_mode (bool): Store True when building test or validation dataset.
-            Default: False.
         seed (int): The random seed used during test time. Default: 255.
     """
 
     def __init__(self,
                  clip_len,
                  num_clips=1,
-                 test_mode=False,
                  float_ok=False,
                  p_interval=1,
                  seed=255):
 
         self.clip_len = clip_len
         self.num_clips = num_clips
-        self.test_mode = test_mode
         self.float_ok = float_ok
         self.seed = seed
         self.p_interval = p_interval
@@ -144,7 +140,7 @@ class UniformSampleFrames:
     def __call__(self, results):
         num_frames = results['total_frames']
 
-        if self.test_mode:
+        if results.get('test_mode', False):
             inds = self._get_test_clips(num_frames, self.clip_len)
         else:
             inds = self._get_train_clips(num_frames, self.clip_len)
@@ -183,7 +179,6 @@ class UniformSampleFrames:
         repr_str = (f'{self.__class__.__name__}('
                     f'clip_len={self.clip_len}, '
                     f'num_clips={self.num_clips}, '
-                    f'test_mode={self.test_mode}, '
                     f'seed={self.seed})')
         return repr_str
 
@@ -213,8 +208,6 @@ class SampleFrames:
         out_of_bound_opt (str): The way to deal with out of bounds frame
             indexes. Available options are 'loop', 'repeat_last'.
             Default: 'loop'.
-        test_mode (bool): Store True when building test or validation dataset.
-            Default: False.
         start_index (None): This argument is deprecated and moved to dataset
             class (``BaseDataset``, ``VideoDatset``, ``RawframeDataset``, etc),
             see this: https://github.com/open-mmlab/mmaction2/pull/89.
@@ -229,7 +222,6 @@ class SampleFrames:
                  temporal_jitter=False,
                  twice_sample=False,
                  out_of_bound_opt='loop',
-                 test_mode=False,
                  start_index=None,
                  keep_tail_frames=False):
 
@@ -239,7 +231,6 @@ class SampleFrames:
         self.temporal_jitter = temporal_jitter
         self.twice_sample = twice_sample
         self.out_of_bound_opt = out_of_bound_opt
-        self.test_mode = test_mode
         self.keep_tail_frames = keep_tail_frames
         assert self.out_of_bound_opt in ['loop', 'repeat_last']
 
@@ -317,7 +308,7 @@ class SampleFrames:
             clip_offsets = np.zeros((self.num_clips, ), dtype=np.int)
         return clip_offsets
 
-    def _sample_clips(self, num_frames):
+    def _sample_clips(self, num_frames, test_mode=False):
         """Choose clip offsets for the video in a given mode.
 
         Args:
@@ -326,7 +317,7 @@ class SampleFrames:
         Returns:
             np.ndarray: Sampled frame indices.
         """
-        if self.test_mode:
+        if test_mode:
             clip_offsets = self._get_test_clips(num_frames)
         else:
             clip_offsets = self._get_train_clips(num_frames)
@@ -342,7 +333,7 @@ class SampleFrames:
         """
         total_frames = results['total_frames']
 
-        clip_offsets = self._sample_clips(total_frames)
+        clip_offsets = self._sample_clips(total_frames, results.get('test_mode', False))
         frame_inds = clip_offsets[:, None] + np.arange(
             self.clip_len)[None, :] * self.frame_interval
         frame_inds = np.concatenate(frame_inds)
@@ -379,6 +370,5 @@ class SampleFrames:
                     f'num_clips={self.num_clips}, '
                     f'temporal_jitter={self.temporal_jitter}, '
                     f'twice_sample={self.twice_sample}, '
-                    f'out_of_bound_opt={self.out_of_bound_opt}, '
-                    f'test_mode={self.test_mode})')
+                    f'out_of_bound_opt={self.out_of_bound_opt})')
         return repr_str

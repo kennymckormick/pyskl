@@ -252,6 +252,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
             onehot[results['label']] = 1.
             results['label'] = onehot
 
+        results['test_mode'] = self.test_mode
         return self.pipeline(results)
 
     def prepare_test_frames(self, idx):
@@ -292,6 +293,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
             onehot[results['label']] = 1.
             results['label'] = onehot
 
+        results['test_mode'] = self.test_mode
         return self.pipeline(results)
 
     def __len__(self):
