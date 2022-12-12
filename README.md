@@ -1,6 +1,8 @@
 # PYSKL
 
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/revisiting-skeleton-based-action-recognition/skeleton-based-action-recognition-on-ntu-rgbd)](https://paperswithcode.com/sota/skeleton-based-action-recognition-on-ntu-rgbd?p=revisiting-skeleton-based-action-recognition) [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/pyskl-towards-good-practices-for-skeleton/skeleton-based-action-recognition-on-ntu-rgbd-1)](https://paperswithcode.com/sota/skeleton-based-action-recognition-on-ntu-rgbd-1?p=pyskl-towards-good-practices-for-skeleton) [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/revisiting-skeleton-based-action-recognition/skeleton-based-action-recognition-on-kinetics)](https://paperswithcode.com/sota/skeleton-based-action-recognition-on-kinetics?p=revisiting-skeleton-based-action-recognition)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/revisiting-skeleton-based-action-recognition/skeleton-based-action-recognition-on-ntu-rgbd)](https://paperswithcode.com/sota/skeleton-based-action-recognition-on-ntu-rgbd?p=revisiting-skeleton-based-action-recognition)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/dg-stgcn-dynamic-spatial-temporal-modeling/skeleton-based-action-recognition-on-ntu-rgbd-1)](https://paperswithcode.com/sota/skeleton-based-action-recognition-on-ntu-rgbd-1?p=dg-stgcn-dynamic-spatial-temporal-modeling)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/revisiting-skeleton-based-action-recognition/skeleton-based-action-recognition-on-kinetics)](https://paperswithcode.com/sota/skeleton-based-action-recognition-on-kinetics?p=revisiting-skeleton-based-action-recognition)
 
 PYSKL is a toolbox focusing on action recognition based on **SK**e**L**eton data with **PY**Torch. Various algorithms will be supported for skeleton-based action recognition. We build this project based on the OpenSource Project [MMAction2](https://github.com/open-mmlab/mmaction2).
 
@@ -19,14 +21,15 @@ Any user can open a PR to contribute to PYSKL. The PR will be reviewed before be
 
 ## News
 
+- Support [DG-STGCN](https://arxiv.org/abs/2210.05895), which is a state-of-the-art skeleton action algorithm that doesn't rely on a pre-defined graph (**2022-12-12**).
 - The [tech report](https://arxiv.org/abs/2205.09443) of PYSKL is accepted by MM 2022 (**2022-06-28**).
 - Support spatial augmentations and provide a benchmark on ST-GCN++  (**2022-05-12**).
 - Support skeleton action recognition demo with GCN algorithms  (**2022-05-03**).
 - Release the skeleton annotations (HRNet 2D Pose), config files, and pre-trained ckpts for Kinetics-400. K400 is a large-scale dataset (even for skeleton), you should have `memcached` and `pymemcache` installed for efficient training & testing on K400 (**2022-05-01**).
-- Provide an example (diving48) for processing a custom video dataset, generating 2D skeleton annotations, and using PoseC3D for skeleton-based action recognition. The tutorial for skeleton extraction part is available in [diving48_example](/examples/extract_diving48_skeleton/diving48_example.ipynb)  (**2022-04-15**).
 
 ## Supported Algorithms
 
+- [x] DG-STGCN (Arxiv): https://arxiv.org/abs/2210.05895 [[MODELZOO](/configs/dgstgcn/README.md)]
 - [x] ST-GCN (AAAI 2018): https://arxiv.org/abs/1801.07455 [[MODELZOO](/configs/stgcn/README.md)]
 - [x] ST-GCN++ (PYSKL, Tech Report): https://arxiv.org/abs/2205.09443 [[MODELZOO](/configs/stgcn++/README.md)]
 - [x] PoseConv3D (CVPR 2022 Oral): https://arxiv.org/abs/2104.13586 [[MODELZOO](/configs/posec3d/README.md)]

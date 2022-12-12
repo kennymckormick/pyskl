@@ -57,10 +57,12 @@ def youtube_dl(idx):
 def run_command(cmd):
     return subprocess.check_output(cmd)
 
-def ls(dirname='.', full=True):
-    if not full:
-        return os.listdir(dirname)
-    return [osp.join(dirname, x) for x in os.listdir(dirname)]
+def ls(dirname='.', full=True, match=''):
+    if not full or dirname == '.':
+        ans = os.listdir(dirname)
+    ans = [osp.join(dirname, x) for x in os.listdir(dirname)]
+    ans = [x for x in ans if match in x]
+    return ans
 
 def add(x, y):
     return x + y
