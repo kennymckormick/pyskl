@@ -1,6 +1,8 @@
 decord>=0.6.0
 matplotlib
-mmcv==1.5.0
+mmcv-full==1.5.0
+mmdet
+mmpose
 moviepy
 numpy>=1.19.5
 opencv-contrib-python
