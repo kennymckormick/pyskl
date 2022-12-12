@@ -1,8 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import warnings
-
 import numpy as np
 
+from pyskl.smp import warning_r0
 from ..builder import PIPELINES
 
 
@@ -28,20 +27,20 @@ class UniformSampleFrames:
     def __init__(self,
                  clip_len,
                  num_clips=1,
-                 float_ok=False,
                  p_interval=1,
-                 seed=255):
+                 seed=255,
+                 **deprecated_kwargs):
 
         self.clip_len = clip_len
         self.num_clips = num_clips
-        self.float_ok = float_ok
         self.seed = seed
         self.p_interval = p_interval
         if not isinstance(p_interval, tuple):
             self.p_interval = (p_interval, p_interval)
-
-        if self.float_ok:
-            warnings.warn('When float_ok == True, there will be no loop.')
+        if len(deprecated_kwargs):
+            warning_r0('[UniformSampleFrames] The following args has been deprecated: ')
+            for k, v in deprecated_kwargs.items():
+                warning_r0(f'Arg name: {k}; Arg value: {v}')
 
     def _get_train_clips(self, num_frames, clip_len):
         """Uniformly sample indices for training clips.
@@ -58,12 +57,7 @@ class UniformSampleFrames:
             num_frames = int(ratio * num_frames)
             off = np.random.randint(old_num_frames - num_frames + 1)
 
-            if self.float_ok:
-                interval = (num_frames - 1) / clip_len
-                offsets = np.arange(clip_len) * interval
-                inds = np.random.rand(clip_len) * interval + offsets
-                inds = inds.astype(np.float32)
-            elif num_frames < clip_len:
+            if num_frames < clip_len:
                 start = np.random.randint(0, num_frames)
                 inds = np.arange(start, start + clip_len)
             elif clip_len <= num_frames < 2 * clip_len:
@@ -97,13 +91,6 @@ class UniformSampleFrames:
             clip_len (int): The length of the clip.
         """
         np.random.seed(self.seed)
-        if self.float_ok:
-            interval = (num_frames - 1) / clip_len
-            offsets = np.arange(clip_len) * interval
-            inds = np.concatenate([
-                np.random.rand(clip_len) * interval + offsets
-                for i in range(self.num_clips)
-            ]).astype(np.float32)
 
         all_inds = []
 
@@ -169,7 +156,7 @@ class UniformSampleFrames:
             coeff = np.array([transitional[i] for i in inds_int])
             inds = (coeff * inds_int + (1 - coeff) * inds).astype(np.float32)
 
-        results['frame_inds'] = inds if self.float_ok else inds.astype(np.int)
+        results['frame_inds'] = inds.astype(np.int)
         results['clip_len'] = self.clip_len
         results['frame_interval'] = None
         results['num_clips'] = self.num_clips
@@ -223,7 +210,8 @@ class SampleFrames:
                  twice_sample=False,
                  out_of_bound_opt='loop',
                  start_index=None,
-                 keep_tail_frames=False):
+                 keep_tail_frames=False,
+                 **deprecated_kwargs):
 
         self.clip_len = clip_len
         self.frame_interval = frame_interval
@@ -235,9 +223,13 @@ class SampleFrames:
         assert self.out_of_bound_opt in ['loop', 'repeat_last']
 
         if start_index is not None:
-            warnings.warn('No longer support "start_index" in "SampleFrames", '
-                          'it should be set in dataset class, see this pr: '
-                          'https://github.com/open-mmlab/mmaction2/pull/89')
+            warning_r0('No longer support "start_index" in "SampleFrames", '
+                       'it should be set in dataset class, see this pr: '
+                       'https://github.com/open-mmlab/mmaction2/pull/89')
+        if len(deprecated_kwargs):
+            warning_r0('[UniformSampleFrames] The following args has been deprecated: ')
+            for k, v in deprecated_kwargs.items():
+                warning_r0(f'Arg name: {k}; Arg value: {v}')
 
     def _get_train_clips(self, num_frames):
         """Get clip offsets in train mode.
