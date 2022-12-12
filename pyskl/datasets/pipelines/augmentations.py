@@ -1,10 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import mmcv
+import numpy as np
 import random
 import warnings
 from collections.abc import Sequence
-
-import mmcv
-import numpy as np
 from torch.nn.modules.utils import _pair
 
 from ..builder import PIPELINES

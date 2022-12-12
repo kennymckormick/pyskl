@@ -9,8 +9,31 @@ class DistEvalHook(BasicDistEvalHook):
     ]
     less_keys = ['loss']
 
-    def __init__(self, *args, save_best='auto', **kwargs):
+    def __init__(self, *args, save_best='auto', seg_interval=None, **kwargs):
         super().__init__(*args, save_best=save_best, **kwargs)
+        self.seg_interval = seg_interval
+        if seg_interval is not None:
+            assert isinstance(seg_interval, list)
+            for i, tup in enumerate(seg_interval):
+                assert isinstance(tup, tuple) and len(tup) == 3 and tup[0] < tup[1]
+                if i < len(seg_interval) - 1:
+                    assert tup[1] == seg_interval[i + 1][0]
+            assert self.by_epoch
+        assert self.start is None
+
+    def _find_n(self, runner):
+        current = runner.epoch
+        for seg in self.seg_interval:
+            if current >= seg[0] and current < seg[1]:
+                return seg[2]
+        return None
+
+    def _should_evaluate(self, runner):
+        if self.seg_interval is None:
+            return super()._should_evaluate(runner)
+        n = self._find_n(runner)
+        assert n is not None
+        return self.every_n_epochs(runner, n)
 
 
 def confusion_matrix(y_pred, y_real, normalize=None):

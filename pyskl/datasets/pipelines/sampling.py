@@ -1,8 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import warnings
-
+import copy as cp
 import numpy as np
 
+from pyskl.smp import warning_r0
 from ..builder import PIPELINES
 
 
@@ -22,30 +22,26 @@ class UniformSampleFrames:
     Args:
         clip_len (int): Frames of each sampled output clip.
         num_clips (int): Number of clips to be sampled. Default: 1.
-        test_mode (bool): Store True when building test or validation dataset.
-            Default: False.
         seed (int): The random seed used during test time. Default: 255.
     """
 
     def __init__(self,
                  clip_len,
                  num_clips=1,
-                 test_mode=False,
-                 float_ok=False,
                  p_interval=1,
-                 seed=255):
+                 seed=255,
+                 **deprecated_kwargs):
 
         self.clip_len = clip_len
         self.num_clips = num_clips
-        self.test_mode = test_mode
-        self.float_ok = float_ok
         self.seed = seed
         self.p_interval = p_interval
         if not isinstance(p_interval, tuple):
             self.p_interval = (p_interval, p_interval)
-
-        if self.float_ok:
-            warnings.warn('When float_ok == True, there will be no loop.')
+        if len(deprecated_kwargs):
+            warning_r0('[UniformSampleFrames] The following args has been deprecated: ')
+            for k, v in deprecated_kwargs.items():
+                warning_r0(f'Arg name: {k}; Arg value: {v}')
 
     def _get_train_clips(self, num_frames, clip_len):
         """Uniformly sample indices for training clips.
@@ -62,12 +58,7 @@ class UniformSampleFrames:
             num_frames = int(ratio * num_frames)
             off = np.random.randint(old_num_frames - num_frames + 1)
 
-            if self.float_ok:
-                interval = (num_frames - 1) / clip_len
-                offsets = np.arange(clip_len) * interval
-                inds = np.random.rand(clip_len) * interval + offsets
-                inds = inds.astype(np.float32)
-            elif num_frames < clip_len:
+            if num_frames < clip_len:
                 start = np.random.randint(0, num_frames)
                 inds = np.arange(start, start + clip_len)
             elif clip_len <= num_frames < 2 * clip_len:
@@ -101,13 +92,6 @@ class UniformSampleFrames:
             clip_len (int): The length of the clip.
         """
         np.random.seed(self.seed)
-        if self.float_ok:
-            interval = (num_frames - 1) / clip_len
-            offsets = np.arange(clip_len) * interval
-            inds = np.concatenate([
-                np.random.rand(clip_len) * interval + offsets
-                for i in range(self.num_clips)
-            ]).astype(np.float32)
 
         all_inds = []
 
@@ -144,7 +128,7 @@ class UniformSampleFrames:
     def __call__(self, results):
         num_frames = results['total_frames']
 
-        if self.test_mode:
+        if results.get('test_mode', False):
             inds = self._get_test_clips(num_frames, self.clip_len)
         else:
             inds = self._get_train_clips(num_frames, self.clip_len)
@@ -173,7 +157,7 @@ class UniformSampleFrames:
             coeff = np.array([transitional[i] for i in inds_int])
             inds = (coeff * inds_int + (1 - coeff) * inds).astype(np.float32)
 
-        results['frame_inds'] = inds if self.float_ok else inds.astype(np.int)
+        results['frame_inds'] = inds.astype(np.int)
         results['clip_len'] = self.clip_len
         results['frame_interval'] = None
         results['num_clips'] = self.num_clips
@@ -183,7 +167,6 @@ class UniformSampleFrames:
         repr_str = (f'{self.__class__.__name__}('
                     f'clip_len={self.clip_len}, '
                     f'num_clips={self.num_clips}, '
-                    f'test_mode={self.test_mode}, '
                     f'seed={self.seed})')
         return repr_str
 
@@ -191,6 +174,106 @@ class UniformSampleFrames:
 @PIPELINES.register_module()
 class UniformSample(UniformSampleFrames):
     pass
+
+
+@PIPELINES.register_module()
+class UniformSampleDecode:
+
+    def __init__(self, clip_len, num_clips=1, p_interval=1, seed=255):
+        self.clip_len = clip_len
+        self.num_clips = num_clips
+        self.seed = seed
+        self.p_interval = p_interval
+        if not isinstance(p_interval, tuple):
+            self.p_interval = (p_interval, p_interval)
+
+    # will directly return the decoded clips
+    def _get_clips(self, full_kp, clip_len):
+        M, T, V, C = full_kp.shape
+        clips = []
+
+        for clip_idx in range(self.num_clips):
+            pi = self.p_interval
+            ratio = np.random.rand() * (pi[1] - pi[0]) + pi[0]
+            num_frames = int(ratio * T)
+            off = np.random.randint(T - num_frames + 1)
+
+            if num_frames < clip_len:
+                start = np.random.randint(0, num_frames)
+                inds = (np.arange(start, start + clip_len) % num_frames) + off
+                clip = full_kp[:, inds].copy()
+            elif clip_len <= num_frames < 2 * clip_len:
+                basic = np.arange(clip_len)
+                inds = np.random.choice(clip_len + 1, num_frames - clip_len, replace=False)
+                offset = np.zeros(clip_len + 1, dtype=np.int64)
+                offset[inds] = 1
+                inds = basic + np.cumsum(offset)[:-1] + off
+                clip = full_kp[:, inds].copy()
+            else:
+                bids = np.array([i * num_frames // clip_len for i in range(clip_len + 1)])
+                bsize = np.diff(bids)
+                bst = bids[:clip_len]
+                offset = np.random.randint(bsize)
+                inds = bst + offset + off
+                clip = full_kp[:, inds].copy()
+            clips.append(clip)
+        return np.concatenate(clips, 1)
+
+    def _handle_dict(self, results):
+        assert 'keypoint' in results
+        kp = results.pop('keypoint')
+        if 'keypoint_score' in results:
+            kp_score = results.pop('keypoint_score')
+            kp = np.concatenate([kp, kp_score[..., None]], axis=-1)
+
+        kp = kp.astype(np.float32)
+        # start_index will not be used
+        kp = self._get_clips(kp, self.clip_len)
+
+        results['clip_len'] = self.clip_len
+        results['frame_interval'] = None
+        results['num_clips'] = self.num_clips
+        results['keypoint'] = kp
+        return results
+
+    def _handle_list(self, results):
+        assert len(results) == self.num_clips
+        self.num_clips = 1
+        clips = []
+        for res in results:
+            assert 'keypoint' in res
+            kp = res.pop('keypoint')
+            if 'keypoint_score' in res:
+                kp_score = res.pop('keypoint_score')
+                kp = np.concatenate([kp, kp_score[..., None]], axis=-1)
+
+            kp = kp.astype(np.float32)
+            kp = self._get_clips(kp, self.clip_len)
+            clips.append(kp)
+        ret = cp.deepcopy(results[0])
+        ret['clip_len'] = self.clip_len
+        ret['frame_interval'] = None
+        ret['num_clips'] = len(results)
+        ret['keypoint'] = np.concatenate(clips, 1)
+        self.num_clips = len(results)
+        return ret
+
+    def __call__(self, results):
+        test_mode = results.get('test_mode', False)
+        if test_mode is True:
+            np.random.seed(self.seed)
+        if isinstance(results, list):
+            return self._handle_list(results)
+        else:
+            return self._handle_dict(results)
+
+    def __repr__(self):
+        repr_str = (f'{self.__class__.__name__}('
+                    f'clip_len={self.clip_len}, '
+                    f'num_clips={self.num_clips}, '
+                    f'p_interval={self.p_interval}, '
+                    f'seed={self.seed})')
+        return repr_str
 
 
 @PIPELINES.register_module()
@@ -213,8 +296,6 @@ class SampleFrames:
         out_of_bound_opt (str): The way to deal with out of bounds frame
             indexes. Available options are 'loop', 'repeat_last'.
             Default: 'loop'.
-        test_mode (bool): Store True when building test or validation dataset.
-            Default: False.
         start_index (None): This argument is deprecated and moved to dataset
             class (``BaseDataset``, ``VideoDatset``, ``RawframeDataset``, etc),
             see this: https://github.com/open-mmlab/mmaction2/pull/89.
@@ -229,9 +310,9 @@ class SampleFrames:
                  temporal_jitter=False,
                  twice_sample=False,
                  out_of_bound_opt='loop',
-                 test_mode=False,
                  start_index=None,
-                 keep_tail_frames=False):
+                 keep_tail_frames=False,
+                 **deprecated_kwargs):
 
         self.clip_len = clip_len
         self.frame_interval = frame_interval
@@ -239,14 +320,17 @@ class SampleFrames:
         self.temporal_jitter = temporal_jitter
         self.twice_sample = twice_sample
         self.out_of_bound_opt = out_of_bound_opt
-        self.test_mode = test_mode
         self.keep_tail_frames = keep_tail_frames
         assert self.out_of_bound_opt in ['loop', 'repeat_last']
 
         if start_index is not None:
-            warnings.warn('No longer support "start_index" in "SampleFrames", '
-                          'it should be set in dataset class, see this pr: '
-                          'https://github.com/open-mmlab/mmaction2/pull/89')
+            warning_r0('No longer support "start_index" in "SampleFrames", '
+                       'it should be set in dataset class, see this pr: '
+                       'https://github.com/open-mmlab/mmaction2/pull/89')
+        if len(deprecated_kwargs):
+            warning_r0('[UniformSampleFrames] The following args has been deprecated: ')
+            for k, v in deprecated_kwargs.items():
+                warning_r0(f'Arg name: {k}; Arg value: {v}')
 
     def _get_train_clips(self, num_frames):
         """Get clip offsets in train mode.
@@ -317,7 +401,7 @@ class SampleFrames:
             clip_offsets = np.zeros((self.num_clips, ), dtype=np.int)
         return clip_offsets
 
-    def _sample_clips(self, num_frames):
+    def _sample_clips(self, num_frames, test_mode=False):
         """Choose clip offsets for the video in a given mode.
 
         Args:
@@ -326,7 +410,7 @@ class SampleFrames:
         Returns:
             np.ndarray: Sampled frame indices.
         """
-        if self.test_mode:
+        if test_mode:
             clip_offsets = self._get_test_clips(num_frames)
         else:
             clip_offsets = self._get_train_clips(num_frames)
@@ -342,7 +426,7 @@ class SampleFrames:
         """
         total_frames = results['total_frames']
 
-        clip_offsets = self._sample_clips(total_frames)
+        clip_offsets = self._sample_clips(total_frames, results.get('test_mode', False))
         frame_inds = clip_offsets[:, None] + np.arange(
             self.clip_len)[None, :] * self.frame_interval
         frame_inds = np.concatenate(frame_inds)
@@ -379,6 +463,5 @@ class SampleFrames:
                     f'num_clips={self.num_clips}, '
                     f'temporal_jitter={self.temporal_jitter}, '
                     f'twice_sample={self.twice_sample}, '
-                    f'out_of_bound_opt={self.out_of_bound_opt}, '
-                    f'test_mode={self.test_mode})')
+                    f'out_of_bound_opt={self.out_of_bound_opt})')
         return repr_str

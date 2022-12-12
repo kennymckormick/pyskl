@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-
 import torch.nn as nn
 from mmcv.cnn import ConvModule, Swish, build_activation_layer, constant_init, kaiming_init
 from mmcv.runner import load_checkpoint

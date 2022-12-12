@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import io
-
 import numpy as np
 from mmcv.fileio import FileClient
 

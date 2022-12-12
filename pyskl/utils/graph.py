@@ -68,12 +68,21 @@ class Graph:
     def __init__(self,
                  layout='coco',
                  mode='spatial',
-                 max_hop=1):
+                 max_hop=1,
+                 nx_node=1,
+                 num_filter=3,
+                 init_std=0.02,
+                 init_off=0.04):
 
         self.max_hop = max_hop
         self.layout = layout
         self.mode = mode
+        self.num_filter = num_filter
+        self.init_std = init_std
+        self.init_off = init_off
+        self.nx_node = nx_node
 
+        assert nx_node == 1 or mode == 'random', "nx_node can be > 1 only if mode is 'random'"
         assert layout in ['openpose', 'nturgb+d', 'coco']
 
         self.get_layout(layout)
@@ -151,3 +160,7 @@ class Graph:
     def binary_adj(self):
         A = edge2mat(self.inward + self.outward, self.num_node)
         return A[None]
+
+    def random(self):
+        num_node = self.num_node * self.nx_node
+        return np.random.randn(self.num_filter, num_node, num_node) * self.init_std + self.init_off

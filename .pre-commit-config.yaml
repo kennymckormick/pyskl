@@ -4,18 +4,14 @@ exclude: >
       ^configs/
   )$
 repos:
-  - repo: https://gitlab.com/pycqa/flake8.git
-    rev: 3.8.3
+  - repo: https://github.com/PyCQA/flake8
+    rev: 5.0.4
     hooks:
       - id: flake8
         args: ["--max-line-length=120"]
         exclude: ^configs/
-  - repo: https://github.com/asottile/seed-isort-config
-    rev: v2.2.0
-    hooks:
-      - id: seed-isort-config
-  - repo: https://github.com/timothycrosley/isort
-    rev: 4.3.21
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.10.1
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/mirrors-yapf

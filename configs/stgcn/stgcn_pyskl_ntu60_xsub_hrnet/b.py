@@ -19,7 +19,7 @@ train_pipeline = [
 val_pipeline = [
     dict(type='PreNormalize2D'),
     dict(type='GenSkeFeat', dataset='coco', feats=['b']),
-    dict(type='UniformSample', clip_len=100, num_clips=1, test_mode=True),
+    dict(type='UniformSample', clip_len=100, num_clips=1),
     dict(type='PoseDecode'),
     dict(type='FormatGCNInput', num_person=2),
     dict(type='Collect', keys=['keypoint', 'label'], meta_keys=[]),
@@ -28,7 +28,7 @@ val_pipeline = [
 test_pipeline = [
     dict(type='PreNormalize2D'),
     dict(type='GenSkeFeat', dataset='coco', feats=['b']),
-    dict(type='UniformSample', clip_len=100, num_clips=10, test_mode=True),
+    dict(type='UniformSample', clip_len=100, num_clips=10),
     dict(type='PoseDecode'),
     dict(type='FormatGCNInput', num_person=2),
     dict(type='Collect', keys=['keypoint', 'label'], meta_keys=[]),

@@ -1,12 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import functools
-from abc import ABCMeta, abstractmethod
-from collections import OrderedDict
-
 import torch
 import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
+from abc import ABCMeta, abstractmethod
+from collections import OrderedDict
 
 from .. import builder
 
