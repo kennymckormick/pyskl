@@ -298,7 +298,7 @@ class unit_sgn(nn.Module):
         return self.relu(self.bn(self.conv(x1) + self.residual(x)))
 
 
-class unit_group_gcn(nn.Module):
+class dggcn(nn.Module):
 
     def __init__(self,
                  in_channels,

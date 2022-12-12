@@ -6,7 +6,7 @@ from mmcv.runner import load_checkpoint
 
 from ...utils import Graph, cache_checkpoint
 from ..builder import BACKBONES
-from .utils import mstcn, unit_gcn, unit_group_gcn, unit_tcn
+from .utils import dggcn, dgmstcn, unit_tcn
 
 EPS = 1e-4
 
@@ -28,21 +28,8 @@ class DGBlock(nn.Module):
         kwargs = {k: v for k, v in kwargs.items() if k[1:4] != 'cn_'}
         assert len(kwargs) == 0
 
-        tcn_type = tcn_kwargs.pop('type', 'mstcn')
-        assert tcn_type in ['unit_tcn', 'mstcn']
-        gcn_type = gcn_kwargs.pop('type', 'group_gcn')
-        assert gcn_type in ['unit_gcn', 'group_gcn']
-
-        if gcn_type == 'unit_gcn':
-            self.gcn = unit_gcn(in_channels, out_channels, A, **gcn_kwargs)
-        elif gcn_type == 'group_gcn':
-            self.gcn = unit_group_gcn(in_channels, out_channels, A, **gcn_kwargs)
-
-        if tcn_type == 'unit_tcn':
-            kernel_size = tcn_kwargs.pop('kernel_size', 9)
-            self.tcn = unit_tcn(out_channels, out_channels, kernel_size, stride=stride, **tcn_kwargs)
-        elif tcn_type == 'mstcn':
-            self.tcn = mstcn(out_channels, out_channels, stride=stride, **tcn_kwargs)
+        self.gcn = dggcn(in_channels, out_channels, A, **gcn_kwargs)
+        self.tcn = dgmstcn(out_channels, out_channels, stride=stride, **tcn_kwargs)
 
         self.relu = nn.ReLU()
 
