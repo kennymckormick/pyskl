@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import os.path as osp
-
 import mmcv
+import os.path as osp
 
 from ..utils import get_root_logger
 from .base import BaseDataset

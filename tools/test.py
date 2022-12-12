@@ -1,11 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # flake8: noqa: E722
 import argparse
+import mmcv
 import os
 import os.path as osp
 import time
-
-import mmcv
 import torch
 import torch.distributed as dist
 from mmcv import Config, load

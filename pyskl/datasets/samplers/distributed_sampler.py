@@ -1,8 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from collections import defaultdict
-
 import torch
+from collections import defaultdict
 from torch.utils.data import DistributedSampler as _DistributedSampler
 
 

@@ -1,9 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # test doublepush
+from setuptools import find_packages, setup
+
 import re
 import sys
 from os.path import exists
-from setuptools import find_packages, setup
 
 
 def readme():

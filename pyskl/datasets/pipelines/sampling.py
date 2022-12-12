@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy as cp
-
 import numpy as np
 
 from pyskl.smp import warning_r0

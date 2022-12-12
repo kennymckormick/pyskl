@@ -1,8 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import functools
-import warnings
-
 import torch
+import warnings
 
 
 class OutputHook:

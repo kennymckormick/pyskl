@@ -1,8 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from abc import ABCMeta, abstractmethod
-
 import torch
 import torch.nn as nn
+from abc import ABCMeta, abstractmethod
 
 from ...core import top_k_accuracy
 from ..builder import build_loss

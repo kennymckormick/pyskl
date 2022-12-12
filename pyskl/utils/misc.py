@@ -3,11 +3,10 @@
 import hashlib
 import logging
 import multiprocessing as mp
+import numpy as np
 import os
 import os.path as osp
 import socket
-
-import numpy as np
 from mmcv import load
 from mmcv.utils import get_logger
 
@@ -28,8 +27,8 @@ def cache_file(arg_tuple):
         time.sleep(5)
         retry -= 1
     assert retry >= 0, 'Failed to launch memcached. '
-    from pymemcache.client.base import Client
     from pymemcache import serde
+    from pymemcache.client.base import Client
 
     cli = Client(mc_cfg, serde=serde.pickle_serde)
 

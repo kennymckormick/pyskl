@@ -2,12 +2,16 @@
 import abc
 import argparse
 import collections
+import cv2
 import json
+import mmcv
 import multiprocessing as mp
+import numpy as np
 import os
 import os.path as osp
 import pickle
 import random as rd
+import requests
 import shutil
 import string
 import subprocess
@@ -16,15 +20,10 @@ import time
 import warnings
 from collections import OrderedDict, defaultdict
 from functools import reduce
-from multiprocessing import Pool, current_process
-
-import cv2
-import mmcv
-import numpy as np
-import requests
 from fvcore.nn import FlopCountAnalysis, parameter_count
 from mmcv import dump, load
 from mmcv.runner import get_dist_info
+from multiprocessing import Pool, current_process
 from tqdm import tqdm
 
 try:
@@ -165,7 +164,7 @@ def fnp(model, input=None):
     return params, None
 
 def cache_objects(mc_root, mc_cfg=('localhost', 22077), mc_size=60000, num_proc=32):
-    from pyskl.utils import test_port, mp_cache, mc_on, mp_cache_single
+    from pyskl.utils import mc_on, mp_cache, mp_cache_single, test_port
     assert isinstance(mc_cfg, tuple) and mc_cfg[0] == 'localhost'
     if not test_port(mc_cfg[0], mc_cfg[1]):
         mc_on(port=mc_cfg[1], launcher='pytorch', size=mc_size)

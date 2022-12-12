@@ -1,14 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # flake8: noqa: E722
 import copy
+import mmcv
+import numpy as np
 import os.path as osp
+import torch
 import warnings
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict, defaultdict
-
-import mmcv
-import numpy as np
-import torch
 from mmcv.utils import print_log
 from torch.utils.data import Dataset
 
@@ -218,8 +217,8 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         """Prepare the frames for training given the index."""
         results = copy.deepcopy(self.video_infos[idx])
         if self.memcached and 'key' in results:
-            from pymemcache.client.base import Client
             from pymemcache import serde
+            from pymemcache.client.base import Client
 
             if self.cli is None:
                 self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
@@ -259,8 +258,8 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         """Prepare the frames for testing given the index."""
         results = copy.deepcopy(self.video_infos[idx])
         if self.memcached and 'key' in results:
-            from pymemcache.client.base import Client
             from pymemcache import serde
+            from pymemcache.client.base import Client
 
             if self.cli is None:
                 self.cli = Client(self.mc_cfg, serde=serde.pickle_serde)
