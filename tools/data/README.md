@@ -44,7 +44,13 @@ We provide links to the pre-processed skeleton annotations, you can directly dow
 
 For Kinetics400, since the skeleton annotations are large, we do not provide the direct download links on aliyun. Please use the following link to download the `kpfiles` and extract it under `$PYSKL/data/k400` for Kinetics-400 training & testing: https://mycuhk-my.sharepoint.com/:u:/g/personal/1155136485_link_cuhk_edu_hk/EeyDCVskqLtClMVVwqD53acBF2FEwkctp3vtRbkLfnKSTw?e=B3SZlM
 
-Here are the BibTex items for each dataset:
+## Process NTURGB+D raw skeleton files
+
+0. Assume that you are using the current directory as the working directory, which is `$PYSKL/tools/data`
+1. Download the raw skeleton files from the [official repo of NTURGB+D](https://github.com/shahroudy/NTURGB-D/), unzip and place all `.skeleton` files in a single folder  (named `nturgb+d_skeletons` in my example).
+2. Run `python ntu_preproc.py` to generate processed skeleton annotations, it will generate `ntu60_3danno.pkl` and `ntu120_3danno.pkl` (If you also downloaded the NTURGB+D 120 skeletons) under your current working directory.
+
+### BibTex items for each provided dataset
 
 ```BibTex
 % NTURGB+D
