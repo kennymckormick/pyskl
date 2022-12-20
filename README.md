@@ -12,20 +12,13 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
   <img src="https://user-images.githubusercontent.com/34324155/123989146-2ecae680-d9fb-11eb-916b-b9db5563a9e5.gif" width="500px"><br>
   <p style="font-size:1.2vw;">Skeleton-base Action Recognition Results on NTU-RGB+D-120</p>
 </div>
-
-## Contributing
-
-PYSKL is an OpenSource Project under the Apache2 license. Any contribution from the community to improve PYSKL is appreciated. For **significant** contributions (like supporting a novel & important task), a corresponding part will be added to our updated tech report, while the contributor will also be added to the author list.
-
-Any user can open a PR to contribute to PYSKL. The PR will be reviewed before being merged into the master branch. If you want to open a **large** PR in PYSKL, you are recommended to first reach me (via my email dhd.efz@gmail.com) to discuss the design, which helps to save large amounts of time in the reviewing stage.
-
 ## News
 
+- We provide a script ([ntu_preproc.py](/tools/data/ntu_preproc.py)) to generate PYSKL-style annotations files from official NTURGB+D skeleton files (**2022-12-20**).
 - Support [DG-STGCN](https://arxiv.org/abs/2210.05895), which is a state-of-the-art skeleton action algorithm that doesn't rely on a pre-defined graph (**2022-12-12**).
 - The [tech report](https://arxiv.org/abs/2205.09443) of PYSKL is accepted by MM 2022 (**2022-06-28**).
 - Support spatial augmentations and provide a benchmark on ST-GCN++  (**2022-05-12**).
 - Support skeleton action recognition demo with GCN algorithms  (**2022-05-03**).
-- Release the skeleton annotations (HRNet 2D Pose), config files, and pre-trained ckpts for Kinetics-400. K400 is a large-scale dataset (even for skeleton), you should have `memcached` and `pymemcache` installed for efficient training & testing on K400 (**2022-05-01**).
 
 ## Supported Algorithms
 
@@ -47,8 +40,6 @@ Any user can open a PR to contribute to PYSKL. The PR will be reviewed before be
 - [x] FineGYM (CVPR 2020): [Finegym: A hierarchical video dataset for fine-grained action understanding](https://openaccess.thecvf.com/content_CVPR_2020/papers/Shao_FineGym_A_Hierarchical_Video_Dataset_for_Fine-Grained_Action_Understanding_CVPR_2020_paper.pdf)
 - [x] Diving48 (ECCV 2018): [Resound: Towards action recognition without representation bias](https://openaccess.thecvf.com/content_ECCV_2018/papers/Yingwei_Li_RESOUND_Towards_Action_ECCV_2018_paper.pdf)
 
-For data pre-processing, we estimate 2D skeletons with a two-stage pose estimator (Faster-RCNN + HRNet). For 3D skeletons, we follow the pre-processing procedure of [CTR-GCN](https://github.com/Uason-Chen/CTR-GCN). Currently, we do not provide the pre-processing scripts. Instead, we directly provide the processed skeleton data as pickle files ([download links here](/tools/data/README.md)), which can be directly used in training and evaluation.  You can use [vis_skeleton](/demo/vis_skeleton.ipynb) to visualize the provided skeleton data.
-
 ## Installation
 ```shell
 git clone https://github.com/kennymckormick/pyskl.git
@@ -59,7 +50,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-## Demonstration
+## Demo
 
 ```shell
 # Before running the demo, make sure you have installed mmcv-full, mmpose and mmdet. You should first install mmcv-full, and then install mmpose, mmdet.
@@ -71,6 +62,17 @@ python demo/demo_skeleton.py demo/ntu_sample.avi demo/demo.mp4 --config configs/
 ```
 
 Note that for running demo on an arbitrary input video, you need a tracker to formulate pose estimation results for each frame into multiple skeleton sequences. Currently we are using a [naive tracker](https://github.com/kennymckormick/pyskl/blob/4ddb7ac384e231694fd2b4b7774144e5762862ab/demo/demo_skeleton.py#L192) based on inter-frame pose similarities. You can also try to write your own tracker.
+
+## Data Preparation
+
+We provide HRNet 2D skeletons for every dataset we supported and Kinect 3D skeletons for the NTURGB+D and NTURGB+D 120 dataset. To obtain the human skeleton annotations, you can:
+
+1. Use our pre-processed skeleton annotations: we directly provide the processed skeleton data for all datasets as pickle files (which can be directly used for training and testing), check [Data Doc](/tools/data/README.md) for the download links and descriptions of the annotation format.
+2. For NTURGB+D 3D skeletons, you can download the official annotations from https://github.com/shahroudy/NTURGB-D, and use our [provided script](/tools/data/ntu_preproc.py) to generate the processed pickle files. The generated files are the same with the provided `ntu60_3danno.pkl` and `ntu120_3danno.pkl`. For detailed instructions, follow the [Data Doc](/tools/data/README.md).
+
+3. We also provide scripts to extract 2D HRNet skeletons from RGB videos, you can follow the [diving48_example](/examples/extract_diving48_skeleton/diving48_example.ipynb) to extract 2D skeletons from an arbitrary RGB video dataset.
+
+You can use [vis_skeleton](/demo/vis_skeleton.ipynb) to visualize the provided skeleton data.
 
 ## Training & Testing
 
@@ -97,5 +99,12 @@ If you use PYSKL in your research or wish to refer to the baseline results publi
 }
 ```
 
+## Contributing
+
+PYSKL is an OpenSource Project under the Apache2 license. Any contribution from the community to improve PYSKL is appreciated. For **significant** contributions (like supporting a novel & important task), a corresponding part will be added to our updated tech report, while the contributor will also be added to the author list.
+
+Any user can open a PR to contribute to PYSKL. The PR will be reviewed before being merged into the master branch. If you want to open a **large** PR in PYSKL, you are recommended to first reach me (via my email dhd.efz@gmail.com) to discuss the design, which helps to save large amounts of time in the reviewing stage.
+
 ## Contact
+
 For any questions, feel free to contact: dhd.efz@gmail.com
