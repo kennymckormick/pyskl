@@ -161,7 +161,7 @@ def gen_anno(name):
 
 
 anno_dict = {}
-num_process = 48
+num_process = 1
 
 if num_process == 1:
     # Each annotations has 4 keys: frame_dir, label, keypoint, total_frames
