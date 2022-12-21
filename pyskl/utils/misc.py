@@ -8,6 +8,7 @@ import os
 import os.path as osp
 import socket
 from mmcv import load
+from mmcv.runner import get_dist_info
 from mmcv.utils import get_logger
 
 from ..smp import download_file
@@ -121,3 +122,8 @@ def cache_checkpoint(filename, cache_dir='.cache'):
             download_file(filename, local_pth)
         filename = local_pth
     return filename
+
+def warning_r0(warn_str):
+    rank, _ = get_dist_info()
+    if rank == 0:
+        warnings.warn(warn_str)
