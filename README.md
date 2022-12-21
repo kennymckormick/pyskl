@@ -12,6 +12,7 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
   <img src="https://user-images.githubusercontent.com/34324155/123989146-2ecae680-d9fb-11eb-916b-b9db5563a9e5.gif" width="500px"><br>
   <p style="font-size:1.2vw;">Skeleton-base Action Recognition Results on NTU-RGB+D-120</p>
 </div>
+
 ## News
 
 - We provide a script ([ntu_preproc.py](/tools/data/ntu_preproc.py)) to generate PYSKL-style annotations files from official NTURGB+D skeleton files (**2022-12-20**).
