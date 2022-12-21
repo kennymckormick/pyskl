@@ -4,7 +4,6 @@ import argparse
 import collections
 import cv2
 import json
-import mmcv
 import multiprocessing as mp
 import numpy as np
 import os
@@ -21,8 +20,6 @@ import warnings
 from collections import OrderedDict, defaultdict
 from functools import reduce
 from fvcore.nn import FlopCountAnalysis, parameter_count
-from mmcv import dump, load
-from mmcv.runner import get_dist_info
 from multiprocessing import Pool, current_process
 from tqdm import tqdm
 
@@ -179,8 +176,3 @@ def cache_objects(mc_root, mc_cfg=('localhost', 22077), mc_size=60000, num_proc=
         mp_cache(mc_cfg, files, num_proc=num_proc)
     elif osp.isfile(mc_root):
         mp_cache_single(mc_cfg, mc_root, num_proc=num_proc)
-
-def warning_r0(warn_str):
-    rank, _ = get_dist_info()
-    if rank == 0:
-        warnings.warn(warn_str)

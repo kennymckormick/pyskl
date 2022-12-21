@@ -2,7 +2,7 @@
 import copy as cp
 import numpy as np
 
-from pyskl.smp import warning_r0
+from pyskl.utils import warning_r0
 from ..builder import PIPELINES
 
 
