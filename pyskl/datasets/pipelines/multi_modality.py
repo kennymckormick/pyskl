@@ -132,7 +132,7 @@ class MMDecode(DecordInit, DecordDecode, PoseDecode):
                 keypoint = results['keypoint'].copy()
 
                 assert keypoint.shape[-1] == 2
-                non_zero = (np.linalg.norm(keypoint, axis=-1) > EPS) * (keypoint > EPS)
+                non_zero = (np.linalg.norm(keypoint, axis=-1) > EPS) * (keypoint.sum(axis=-1) > EPS)
 
                 keypoint[..., 0] *= (nw / ow)
                 keypoint[..., 1] *= (nh / oh)
