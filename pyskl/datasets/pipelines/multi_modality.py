@@ -5,6 +5,8 @@ from .loading import DecordDecode, DecordInit
 from .pose_related import PoseDecode
 from .sampling import UniformSampleFrames
 
+EPS = 1e-4
+
 
 @PIPELINES.register_module()
 class MMPad:
@@ -120,4 +122,23 @@ class MMDecode(DecordInit, DecordDecode, PoseDecode):
                 results['keypoint_score'] = self._load_kpscore(results['keypoint_score'], frame_inds)
             else:
                 raise NotImplementedError(f'MMDecode: Modality {mod} not supported')
+
+        # We need to scale human keypoints to the new image size
+        if 'imgs' in results:
+            real_img_shape = results['imgs'][0].shape[:2]
+            if real_img_shape != results['img_shape']:
+                oh, ow = results['img_shape']
+                nh, nw = real_img_shape
+                keypoint = results['keypoint'].copy()
+
+                assert keypoint.shape[-1] == 2
+                non_zero = (np.linalg.norm(keypoint, axis=-1) > EPS) * (keypoint > EPS)
+
+                keypoint[..., 0] *= (nw / ow)
+                keypoint[..., 1] *= (nh / oh)
+
+                results['keypoint'] = keypoint * non_zero[..., None] + results['keypoint'] * (1 - non_zero)[..., None]
+                results['img_shape'] = real_img_shape
+                results['original_shape'] = real_img_shape
+
         return results
