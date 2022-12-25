@@ -71,7 +71,7 @@ class MMUniformSampleFrames(UniformSampleFrames):
         num_frames = results['total_frames']
         modalities = []
         for modality, clip_len in self.clip_len.items():
-            if self.test_mode:
+            if results['test_mode']:
                 inds = self._get_test_clips(num_frames, clip_len)
             else:
                 inds = self._get_train_clips(num_frames, clip_len)

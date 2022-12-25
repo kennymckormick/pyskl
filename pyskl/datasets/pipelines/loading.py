@@ -56,7 +56,14 @@ class DecordInit:
             results['filename'] = results['frame_dir'] + '.mp4'
 
         results['video_reader'] = self._get_videoreader(results['filename'])
-        results['total_frames'] = len(results['video_reader'])
+        if 'total_frames' in results:
+
+            assert results['total_frames'] == len(results['video_reader']), (
+                'SkeFrames', results['total_frames'], 'VideoFrames', len(results['video_reader'])
+            )
+        else:
+            results['total_frames'] = len(results['video_reader'])
+
         return results
 
     def __repr__(self):
