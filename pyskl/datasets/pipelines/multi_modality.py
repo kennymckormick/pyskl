@@ -89,13 +89,11 @@ class MMUniformSampleFrames(UniformSampleFrames):
 
 @PIPELINES.register_module()
 class MMDecode(DecordInit, DecordDecode, PoseDecode):
-    # rgb_type in ['video', 'frame']
     def __init__(self, io_backend='disk', **kwargs):
         self.io_backend = io_backend
         self.kwargs = kwargs
         self.file_client = None
 
-    # def _decode_rgb(self, frame_dir)
     def __call__(self, results):
         for mod in results['modality']:
             if results[f'{mod}_inds'].ndim != 1:
