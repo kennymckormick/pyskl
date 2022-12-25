@@ -90,6 +90,8 @@ class MMUniformSampleFrames(UniformSampleFrames):
 @PIPELINES.register_module()
 class MMDecode(DecordInit, DecordDecode, PoseDecode):
     def __init__(self, io_backend='disk', **kwargs):
+        DecordInit.__init__(self, io_backend=io_backend, **kwargs)
+        DecordDecode.__init__(self)
         self.io_backend = io_backend
         self.kwargs = kwargs
         self.file_client = None
@@ -107,16 +109,15 @@ class MMDecode(DecordInit, DecordDecode, PoseDecode):
                 del video_reader
                 results['imgs'] = imgs
             elif mod == 'Pose':
-                assert 'kp' in results
-                if 'kpscore' not in results:
-                    kpscore = [
-                        np.ones(kp.shape[:-1], dtype=np.float32)
-                        for kp in results['kp']
+                assert 'keypoint' in results
+                if 'keypoint_score' not in results:
+                    keypoint_score = [
+                        np.ones(keypoint.shape[:-1], dtype=np.float32)
+                        for keypoint in results['keypoint']
                     ]
-                    results['kpscore'] = kpscore
-                results['kp'] = self._load_kp(results['kp'], frame_inds)
-                results['kpscore'] = self._load_kp(results['kpscore'],
-                                                   frame_inds)
+                    results['keypoint_score'] = keypoint_score
+                results['keypoint'] = self._load_kp(results['keypoint'], frame_inds)
+                results['keypoint_score'] = self._load_kpscore(results['keypoint_score'], frame_inds)
             else:
                 raise NotImplementedError(f'MMDecode: Modality {mod} not supported')
         return results
