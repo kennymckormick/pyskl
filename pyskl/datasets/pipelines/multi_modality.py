@@ -52,7 +52,6 @@ class MMPad:
             results['imgs'] = self._pad_imgs(results['imgs'], results['img_shape'], (h, w))
 
         results['img_shape'] = (h, w)
-        results['original_shape'] = (h, w)
         return results
 
 

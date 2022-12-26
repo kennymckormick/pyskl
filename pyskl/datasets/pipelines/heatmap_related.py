@@ -53,7 +53,8 @@ class GeneratePoseTarget:
                  left_kp=(1, 3, 5, 7, 9, 11, 13, 15),
                  right_kp=(2, 4, 6, 8, 10, 12, 14, 16),
                  left_limb=(0, 2, 4, 5, 6, 10, 11, 12),
-                 right_limb=(1, 3, 7, 8, 9, 13, 14, 15)):
+                 right_limb=(1, 3, 7, 8, 9, 13, 14, 15),
+                 scaling=1.):
 
         self.sigma = sigma
         self.use_score = use_score
@@ -67,6 +68,7 @@ class GeneratePoseTarget:
         self.skeletons = skeletons
         self.left_limb = left_limb
         self.right_limb = right_limb
+        self.scaling = scaling
 
     def generate_a_heatmap(self, arr, centers, max_values):
         """Generate pseudo heatmap for one keypoint in one frame.
@@ -221,6 +223,12 @@ class GeneratePoseTarget:
             all_kpscores = np.ones(kp_shape[:-1], dtype=np.float32)
 
         img_h, img_w = results['img_shape']
+
+        # scale img_h, img_w and kps
+        img_h = int(img_h * self.scaling + 0.5)
+        img_w = int(img_w * self.scaling + 0.5)
+        all_kps[..., :2] *= self.scaling
+
         num_frame = kp_shape[1]
         num_c = 0
         if self.with_kp:
