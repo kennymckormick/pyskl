@@ -170,7 +170,7 @@ class FormatShape(object):
 
     def __init__(self, input_format):
         self.input_format = input_format
-        if self.input_format not in ['NCTHW', 'NCHW', 'NCTHW_heatmap']:
+        if self.input_format not in ['NCTHW', 'NCHW', 'NCTHW_Heatmap']:
             raise ValueError(
                 f'The input format {self.input_format} is invalid.')
 
