@@ -53,8 +53,7 @@ class RGBPoseSlowFast(nn.Module):
                     pool1_stride=(1, 1),
                     inflate=(0, 1, 1),
                     spatial_strides=(2, 2, 2),
-                    temporal_strides=(1, 1, 1),
-                    dilations=(1, 1, 1))):
+                    temporal_strides=(1, 1, 1))):
 
         super().__init__()
         self.pretrained = pretrained
@@ -167,8 +166,7 @@ class RGBPoseSlowFast(nn.Module):
 
         x_rgb = self.rgb_path.layer4(x_rgb)
         x_pose = self.pose_path.layer3(x_pose)
-
-        assert self.lateral_last is False
+        
         return (x_rgb, x_pose)
 
     def train(self, mode=True):
