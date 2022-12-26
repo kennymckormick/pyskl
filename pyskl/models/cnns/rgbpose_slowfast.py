@@ -6,7 +6,7 @@ from mmcv.utils import _BatchNorm, print_log
 
 from ...utils import get_root_logger
 from ..builder import BACKBONES
-from .resnet3d_slowfast import build_pathway
+from .resnet3d_slowfast import ResNet3dPathway
 
 
 @BACKBONES.register_module()
@@ -14,86 +14,52 @@ class RGBPoseSlowFast(nn.Module):
     """Slowfast backbone.
 
     Args:
-        depth (int): Depth of resnet, from {18, 34, 50, 101, 152}.
         pretrained (str): The file path to a pretrained model.
         speed_ratio (int): Speed ratio indicating the ratio between time
             dimension of the fast and slow pathway, corresponding to the
-            :math:`\\alpha` in the paper. Default: 8.
+            :math:`\\alpha` in the paper. Default: 4.
         channel_ratio (int): Reduce the channel number of fast pathway
             by ``channel_ratio``, corresponding to :math:`\\beta` in the paper.
-            Default: 8.
-        rgb_pathway (dict): Configuration of slow branch, should contain
-            necessary arguments for building the specific type of pathway
-            and:
-            type (str): type of backbone the pathway bases on.
-            lateral (bool): determine whether to build lateral connection
-            for the pathway.Default:
-
-            .. code-block:: Python
-
-                dict(type='ResNetPathway',
-                lateral=True, depth=50, pretrained=None,
-                conv1_kernel=(1, 7, 7), dilations=(1, 1, 1, 1),
-                conv1_stride_t=1, pool1_stride_t=1, inflate=(0, 0, 1, 1))
-
-        pose_pathway (dict): Configuration of fast branch, similar to
-            `rgb_pathway`. Default:
-
-            .. code-block:: Python
-
-                dict(type='ResNetPathway',
-                lateral=False, depth=50, pretrained=None, base_channels=8,
-                conv1_kernel=(5, 7, 7), conv1_stride_t=1, pool1_stride_t=1)
+            Default: 4.
     """
+    def __init__(self,
+                 pretrained=None,
+                 speed_ratio=4,
+                 channel_ratio=4,
+                 rgb_detach=False,
+                 pose_detach=False,
+                 rgb_drop_path=0,
+                 pose_drop_path=0,
+                 rgb_pathway=dict(
+                    depth=50,
+                    lateral=True,
+                    lateral_infl=1,
+                    lateral_activate=(0, 0, 1, 1),
+                    base_channels=64,
+                    conv1_kernel=(1, 7, 7),
+                    inflate=(0, 0, 1, 1)),
+                 pose_pathway=dict(
+                    depth=50,
+                    lateral=True,
+                    lateral_inv=True,
+                    lateral_infl=16,
+                    lateral_activate=(0, 1, 1),
+                    in_channels=17,
+                    base_channels=32,
+                    num_stages=3,
+                    out_indices=(2, ),
+                    conv1_kernel=(1, 7, 7),
+                    conv1_stride=(1, 1),
+                    pool1_stride=(1, 1),
+                    inflate=(0, 1, 1),
+                    spatial_strides=(2, 2, 2),
+                    temporal_strides=(1, 1, 1),
+                    dilations=(1, 1, 1))):
 
-    def __init__(
-        self,
-        pretrained,
-        speed_ratio=4,
-        channel_ratio=4,
-        lateral_last=False,
-        # 'rgb_detach' means use detached x_pose in rgb_branch
-        rgb_detach=False,
-        pose_detach=False,
-        # 'rgb_drop_path' means drop pose lateral in rgb_branch
-        rgb_drop_path=0,
-        pose_drop_path=0,
-        rgb_pathway=dict(
-            type='resnet3d',
-            depth=50,
-            pretrained=None,
-            lateral=True,
-            lateral_infl=1,
-            lateral_activate=[0, 0, 1, 1],
-            base_channels=64,
-            conv1_kernel=(1, 7, 7),
-            conv1_stride_t=1,
-            pool1_stride_t=1,
-            inflate=(0, 0, 1, 1)),
-        pose_pathway=dict(
-            type='resnet3d',
-            depth=50,
-            pretrained=None,
-            lateral=False,
-            in_channels=25,
-            base_channels=32,
-            num_stages=3,
-            out_indices=(0, 1, 2),
-            conv1_kernel=(1, 7, 7),
-            conv1_stride_s=1,
-            conv1_stride_t=1,
-            pool1_stride_s=1,
-            pool1_stride_t=1,
-            inflate=(0, 1, 1),
-            spatial_strides=(2, 2, 2),
-            temporal_strides=(1, 1, 1),
-            dilations=(1, 1, 1),
-            with_pool2=False)):
         super().__init__()
         self.pretrained = pretrained
         self.speed_ratio = speed_ratio
         self.channel_ratio = channel_ratio
-        self.lateral_last = lateral_last
 
         if rgb_pathway['lateral']:
             rgb_pathway['speed_ratio'] = speed_ratio
@@ -103,8 +69,8 @@ class RGBPoseSlowFast(nn.Module):
             pose_pathway['speed_ratio'] = speed_ratio
             pose_pathway['channel_ratio'] = channel_ratio
 
-        self.rgb_path = build_pathway(rgb_pathway)
-        self.pose_path = build_pathway(pose_pathway)
+        self.rgb_path = ResNet3dPathway(**rgb_pathway)
+        self.pose_path = ResNet3dPathway(**pose_pathway)
         self.rgb_detach = rgb_detach
         self.pose_detach = pose_detach
         assert 0 <= rgb_drop_path <= 1
@@ -153,7 +119,6 @@ class RGBPoseSlowFast(nn.Module):
         x_rgb = self.rgb_path.conv1(imgs)
         x_rgb = self.rgb_path.maxpool(x_rgb)
         # N x 64 x 8 x 56 x 56
-
         x_pose = self.pose_path.conv1(heatmap_imgs)
         x_pose = self.pose_path.maxpool(x_pose)
 

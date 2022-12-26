@@ -212,8 +212,8 @@ class ResNet3d(nn.Module):
         spatial_strides (tuple[int]): Spatial strides of residual blocks of each stage. Default: (1, 2, 2, 2).
         temporal_strides (tuple[int]): Temporal strides of residual blocks of each stage. Default: (1, 1, 1, 1).
         conv1_kernel (tuple[int]): Kernel size of the first conv layer. Default: (3, 7, 7).
-        conv1_stride (tuple[int]): Stride of the first conv layer. Default: (1, 2).
-        pool1_stride (tuple[int]): Stride of the first pooling layer. Default: (1, 2).
+        conv1_stride (tuple[int]): Stride of the first conv layer (temporal, spatial). Default: (1, 2).
+        pool1_stride (tuple[int]): Stride of the first pooling layer (temporal, spatial). Default: (1, 2).
         advanced (bool): Flag indicating if an advanced design for downsample is adopted. Default: False.
         frozen_stages (int): Stages to be frozen (all param fixed). -1 means not freezing any parameters. Default: -1.
         inflate (tuple[int]): Inflate Dims of each block. Default: (1, 1, 1, 1).
@@ -299,15 +299,17 @@ class ResNet3d(nn.Module):
         self.inplanes = self.base_channels
 
         self._make_stem_layer()
-
         self.res_layers = []
+        # This field can be utilized by ResNet3dPathway, and has not side effect.
+        lateral_inplanes = getattr(self, 'lateral_inplanes', [0, 0, 0, 0])
+
         for i, num_blocks in enumerate(self.stage_blocks):
             spatial_stride = spatial_strides[i]
             temporal_stride = temporal_strides[i]
             planes = self.base_channels * 2**i
             res_layer = self.make_res_layer(
                 self.block,
-                self.inplanes,
+                self.inplanes + lateral_inplanes[i],
                 planes,
                 num_blocks,
                 stride=(temporal_stride, spatial_stride),
