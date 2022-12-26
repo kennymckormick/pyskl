@@ -248,6 +248,7 @@ class GeneratePoseTarget:
 
     def __call__(self, results):
         heatmap = self.gen_an_aug(results)
+        key = 'heatmap_imgs' if 'imgs' in results else 'imgs'
 
         if self.double:
             indices = np.arange(heatmap.shape[1], dtype=np.int64)
@@ -257,7 +258,7 @@ class GeneratePoseTarget:
                 indices[r] = l
             heatmap_flip = heatmap[..., ::-1][:, indices]
             heatmap = np.concatenate([heatmap, heatmap_flip])
-        results['imgs'] = heatmap
+        results[key] = heatmap
         return results
 
     def __repr__(self):

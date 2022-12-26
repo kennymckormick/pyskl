@@ -158,7 +158,7 @@ class Collect:
 
 
 @PIPELINES.register_module()
-class FormatShape:
+class FormatShape(object):
     """Format final imgs shape to the given input_format.
 
     Required keys are "imgs", "num_clips" and "clip_len", added or modified
@@ -166,65 +166,82 @@ class FormatShape:
 
     Args:
         input_format (str): Define the final imgs format.
-        collapse (bool): To collpase input_format N... to ... (NCTHW to CTHW,
-            etc.) if N is 1. Should be set as True when training and testing
-            detectors. Default: False.
     """
 
-    def __init__(self, input_format, collapse=False):
+    def __init__(self, input_format):
         self.input_format = input_format
-        self.collapse = collapse
-        if self.input_format not in ['NCTHW', 'NCHW', 'NCTHW_Heatmap']:
+        if self.input_format not in ['NCTHW', 'NCHW', 'NCHW_Flow']:
             raise ValueError(
                 f'The input format {self.input_format} is invalid.')
 
     def __call__(self, results):
-        """Performs the FormatShape formatting.
+        """Performs the FormatShape formating.
 
         Args:
             results (dict): The resulting dict to be modified and passed
                 to the next transform in pipeline.
         """
-        if not isinstance(results['imgs'], np.ndarray):
-            results['imgs'] = np.array(results['imgs'])
-        imgs = results['imgs']
         # [M x H x W x C]
         # M = 1 * N_crops * N_clips * L
-        if self.collapse:
-            assert results['num_clips'] == 1
-
         if self.input_format == 'NCTHW':
-            num_clips = results['num_clips']
-            clip_len = results['clip_len']
+            if 'imgs' in results:
+                imgs = results['imgs']
+                num_clips = results['num_clips']
+                clip_len = results['clip_len']
+                if isinstance(clip_len, dict):
+                    clip_len = clip_len['RGB']
 
-            imgs = imgs.reshape((-1, num_clips, clip_len) + imgs.shape[1:])
-            # N_crops x N_clips x L x H x W x C
-            imgs = np.transpose(imgs, (0, 1, 5, 2, 3, 4))
-            # N_crops x N_clips x C x L x H x W
-            imgs = imgs.reshape((-1, ) + imgs.shape[2:])
-            # M' x C x L x H x W
-            # M' = N_crops x N_clips
-        elif self.input_format == 'NCTHW_Heatmap':
-            num_clips = results['num_clips']
-            clip_len = results['clip_len']
+                imgs = imgs.reshape((-1, num_clips, clip_len) + imgs.shape[1:])
+                # N_crops x N_clips x L x H x W x C
+                imgs = np.transpose(imgs, (0, 1, 5, 2, 3, 4))
+                # N_crops x N_clips x C x L x H x W
+                imgs = imgs.reshape((-1, ) + imgs.shape[2:])
+                # M' x C x L x H x W
+                # M' = N_crops x N_clips
+                results['imgs'] = imgs
+                results['input_shape'] = imgs.shape
 
-            imgs = imgs.reshape((-1, num_clips, clip_len) + imgs.shape[1:])
-            # N_crops x N_clips x L x C x H x W
-            imgs = np.transpose(imgs, (0, 1, 3, 2, 4, 5))
-            # N_crops x N_clips x C x L x H x W
-            imgs = imgs.reshape((-1, ) + imgs.shape[2:])
-            # M' x C x L x H x W
-            # M' = N_crops x N_clips
+            if 'heatmap_imgs' in results:
+                imgs = results['heatmap_imgs']
+                num_clips = results['num_clips']
+                clip_len = results['clip_len']
+                # clip_len must be a dict
+                clip_len = clip_len['Pose']
+
+                imgs = imgs.reshape((-1, num_clips, clip_len) + imgs.shape[1:])
+                # N_crops x N_clips x L x H x W x C
+                imgs = np.transpose(imgs, (0, 1, 5, 2, 3, 4))
+                # N_crops x N_clips x C x L x H x W
+                imgs = imgs.reshape((-1, ) + imgs.shape[2:])
+                # M' x C x L x H x W
+                # M' = N_crops x N_clips
+                results['heatmap_imgs'] = imgs
+                results['heatmap_input_shape'] = imgs.shape
+
         elif self.input_format == 'NCHW':
-            imgs = np.transpose(imgs, (0, 3, 1, 2))
-            # M x C x H x W
+            if 'imgs' in results:
+                imgs = results['imgs']
+                imgs = np.transpose(imgs, (0, 3, 1, 2))
+                # M x C x H x W
+                results['imgs'] = imgs
+                results['input_shape'] = imgs.shape
+        elif self.input_format == 'NCHW_Flow':
+            if 'imgs' in results:
+                imgs = results['imgs']
+                num_clips = results['num_clips']
+                clip_len = results['clip_len']
+                imgs = imgs.reshape((-1, num_clips, clip_len) + imgs.shape[1:])
+                # N_crops x N_clips x L x H x W x C
+                imgs = np.transpose(imgs, (0, 1, 2, 5, 3, 4))
+                # N_crops x N_clips x L x C x H x W
+                imgs = imgs.reshape((-1, imgs.shape[2] * imgs.shape[3]) +
+                                    imgs.shape[4:])
+                # M' x C' x H x W
+                # M' = N_crops x N_clips
+                # C' = L x C
+                results['imgs'] = imgs
+                results['input_shape'] = imgs.shape
 
-        if self.collapse:
-            assert imgs.shape[0] == 1
-            imgs = imgs.squeeze(0)
-
-        results['imgs'] = imgs
-        results['input_shape'] = imgs.shape
         return results
 
     def __repr__(self):
