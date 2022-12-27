@@ -1,6 +1,6 @@
 import torch
 
-from ..registry import RECOGNIZERS
+from ..builder import RECOGNIZERS
 from .base import BaseRecognizer
 
 
