@@ -10,7 +10,7 @@ from .resnet3d_slowfast import ResNet3dPathway
 
 
 @BACKBONES.register_module()
-class RGBPoseSlowFast(nn.Module):
+class RGBPoseConv3D(nn.Module):
     """Slowfast backbone.
 
     Args:
@@ -31,7 +31,7 @@ class RGBPoseSlowFast(nn.Module):
                  rgb_drop_path=0,
                  pose_drop_path=0,
                  rgb_pathway=dict(
-                    depth=50,
+                    num_stages=4,
                     lateral=True,
                     lateral_infl=1,
                     lateral_activate=(0, 0, 1, 1),
@@ -39,14 +39,14 @@ class RGBPoseSlowFast(nn.Module):
                     conv1_kernel=(1, 7, 7),
                     inflate=(0, 0, 1, 1)),
                  pose_pathway=dict(
-                    depth=50,
+                    num_stages=3,
+                    stage_blocks=(4, 6, 3),
                     lateral=True,
                     lateral_inv=True,
                     lateral_infl=16,
                     lateral_activate=(0, 1, 1),
                     in_channels=17,
                     base_channels=32,
-                    num_stages=3,
                     out_indices=(2, ),
                     conv1_kernel=(1, 7, 7),
                     conv1_stride=(1, 1),
@@ -166,7 +166,7 @@ class RGBPoseSlowFast(nn.Module):
 
         x_rgb = self.rgb_path.layer4(x_rgb)
         x_pose = self.pose_path.layer3(x_pose)
-        
+
         return (x_rgb, x_pose)
 
     def train(self, mode=True):
