@@ -143,6 +143,14 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
                 eval_results.update({f'{k}_{i}': v for k, v in eval_results_cur.items()})
             return eval_results
 
+        elif isinstance(results[0], dict):
+            eval_results = dict()
+            for key in results[0]:
+                results_cur = [x[key] for x in results]
+                eval_results_cur = self.evaluate(results_cur, metrics, metric_options, logger, **deprecated_kwargs)
+                eval_results.update({f'{key}_{k}': v for k, v in eval_results_cur.items()})
+            return eval_results
+
         # Protect ``metric_options`` since it uses mutable value as default
         metric_options = copy.deepcopy(metric_options)
         if deprecated_kwargs != {}:
