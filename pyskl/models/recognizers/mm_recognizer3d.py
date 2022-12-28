@@ -72,9 +72,11 @@ class MMRecognizer3D(BaseRecognizer):
         # cuz we use extend for accumulation
         return [cls_scores]
 
-    def forward_dummy(self, imgs):
-        imgs = imgs.reshape((-1, ) + imgs.shape[2:])
+    def forward(self, imgs, heatmap_imgs, label=None, return_loss=True, **kwargs):
+        """Define the computation performed at every call."""
+        if return_loss:
+            if label is None:
+                raise ValueError('Label should not be None.')
+            return self.forward_train(imgs, heatmap_imgs, label, **kwargs)
 
-        x = self.extract_feat(imgs)
-        outs = (self.cls_head(x), )
-        return outs
+        return self.forward_test(imgs, heatmap_imgs, **kwargs)
