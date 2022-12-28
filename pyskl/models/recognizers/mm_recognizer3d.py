@@ -1,5 +1,3 @@
-import torch
-
 from ..builder import RECOGNIZERS
 from .base import BaseRecognizer
 
@@ -44,26 +42,8 @@ class MMRecognizer3D(BaseRecognizer):
         imgs = imgs.reshape((-1, ) + imgs.shape[2:])
         heatmap_imgs = heatmap_imgs.reshape((-1, ) + heatmap_imgs.shape[2:])
 
-        if self.test_batch is None:
-            x_rgb, x_pose = self.backbone(imgs, heatmap_imgs)
-            cls_scores = self.cls_head((x_rgb, x_pose))
-        else:
-            tot = imgs.shape[0]
-            ptr = 0
-            # will be a list of dict
-            cls_scores = []
-            while ptr < tot:
-                batch_imgs = imgs[ptr:ptr + self.test_batch]
-                batch_heatmap_imgs = heatmap_imgs[ptr:ptr + self.test_batch]
-
-                x_rgb, x_pose = self.backbone(batch_imgs, batch_heatmap_imgs)
-                cls_scores.append(self.cls_head((x_rgb, x_pose)))
-                ptr += self.test_batch
-
-            all_cls_scores = {}
-            for k in cls_scores[0]:
-                all_cls_scores[k] = torch.cat([item[k] for item in cls_scores])
-            cls_scores = all_cls_scores
+        x_rgb, x_pose = self.backbone(imgs, heatmap_imgs)
+        cls_scores = self.cls_head((x_rgb, x_pose))
 
         for k in cls_scores:
             cls_score = self.average_clip(cls_scores[k], num_segs)
