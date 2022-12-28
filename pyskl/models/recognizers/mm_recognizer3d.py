@@ -38,7 +38,6 @@ class MMRecognizer3D(BaseRecognizer):
         testing."""
         assert imgs.shape[0] == 1 and heatmap_imgs.shape[0] == 1
         assert not hasattr(self, 'neck')
-        num_segs = imgs.shape[1]
         imgs = imgs.reshape((-1, ) + imgs.shape[2:])
         heatmap_imgs = heatmap_imgs.reshape((-1, ) + heatmap_imgs.shape[2:])
 
@@ -46,7 +45,7 @@ class MMRecognizer3D(BaseRecognizer):
         cls_scores = self.cls_head((x_rgb, x_pose))
 
         for k in cls_scores:
-            cls_score = self.average_clip(cls_scores[k], num_segs)
+            cls_score = self.average_clip(cls_scores[k][None])
             cls_scores[k] = cls_score.data.cpu().numpy()[0]
 
         # cuz we use extend for accumulation
