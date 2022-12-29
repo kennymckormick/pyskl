@@ -16,15 +16,14 @@ dataset_type = 'PoseDataset'
 data_root = '/new-pool/dhd/data/nturgbd'
 ann_file = 'data/nturgbd/ntu60_hrnet.pkl'
 
-img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
+img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
 
 train_pipeline = [
     dict(type='MMUniformSampleFrames', clip_len=dict(RGB=8), num_clips=1),
     dict(type='MMDecode'),
     dict(type='MMCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(256, 256), keep_ratio=False),
-    dict(type='RandomResizedCrop', area_range=(0.30, 1.0)),
+    dict(type='RandomResizedCrop', area_range=(0.56, 1.0)),
     dict(type='Resize', scale=(224, 224), keep_ratio=False),
     dict(type='Flip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
@@ -70,17 +69,6 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 lr_config = dict(policy='CosineAnnealing', by_epoch=False, min_lr=0)
 total_epochs = 18
 checkpoint_config = dict(interval=1)
-workflow = [('train', 1)]
-evaluation = dict(
-    interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'], topk=(1, 5))
-log_config = dict(
-    interval=20,
-    hooks=[
-        dict(type='TextLoggerHook'),
-    ])
-dist_params = dict(backend='nccl')
-log_level = 'INFO'
-work_dir = './work_dirs/preli/ntu_rgb'
-load_from = None
-resume_from = None
-find_unused_parameters = False
+evaluation = dict(interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'], topk=(1, 5))
+log_config = dict(interval=20, hooks=[dict(type='TextLoggerHook')])
+work_dir = './work_dirs/rgbpose_conv3d/rgb_only'
