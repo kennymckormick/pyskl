@@ -11,6 +11,7 @@ from collections import OrderedDict, defaultdict
 from mmcv.utils import print_log
 from torch.utils.data import Dataset
 
+from pyskl.smp import auto_mix2
 from ..core import mean_average_precision, mean_class_accuracy, top_k_accuracy
 from .pipelines import Compose
 
@@ -141,6 +142,23 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
                 eval_results_cur = self.evaluate(
                     [x[i] for x in results], metrics, metric_options, logger, **deprecated_kwargs)
                 eval_results.update({f'{k}_{i}': v for k, v in eval_results_cur.items()})
+            return eval_results
+
+        elif isinstance(results[0], dict):
+            eval_results = dict()
+            for key in results[0]:
+                results_cur = [x[key] for x in results]
+                eval_results_cur = self.evaluate(results_cur, metrics, metric_options, logger, **deprecated_kwargs)
+                eval_results.update({f'{key}_{k}': v for k, v in eval_results_cur.items()})
+            # Ad-hoc for RGBPoseConv3D
+            if len(results[0]) == 2 and 'rgb' in results[0] and 'pose' in results[0]:
+                rgb = [x['rgb'] for x in results]
+                pose = [x['pose'] for x in results]
+                preds = auto_mix2([rgb, pose])
+                for k in preds:
+                    eval_results_cur = self.evaluate(preds[k], metrics, metric_options, logger, **deprecated_kwargs)
+                    eval_results.update({f'RGBPose_{k}_{key}': v for key, v in eval_results_cur.items()})
+
             return eval_results
 
         # Protect ``metric_options`` since it uses mutable value as default

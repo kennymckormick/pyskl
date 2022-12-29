@@ -80,6 +80,10 @@ def comb(scores, coeffs):
         ret = [x + y for x, y in zip(ret, [x * coeffs[i] for x in scores[i]])]
     return ret
 
+def auto_mix2(scores):
+    assert len(scores) == 2
+    return {'1:1': comb(scores, [1, 1]), '2:1': comb(scores, [2, 1]), '1:2': comb(scores, [1, 2])}
+
 def top1(score, label):
     return np.mean(intop(score, label, 1))
 

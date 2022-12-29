@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import io
 import numpy as np
+import os.path as osp
 from mmcv.fileio import FileClient
 
 from ..builder import PIPELINES
@@ -28,13 +29,9 @@ class DecordInit:
         self.kwargs = kwargs
         self.file_client = None
 
-    def __call__(self, results):
-        """Perform the Decord initialization.
-
-        Args:
-            results (dict): The resulting dict to be modified and passed
-                to the next transform in pipeline.
-        """
+    def _get_videoreader(self, filename):
+        if osp.splitext(filename)[0] == filename:
+            filename = filename + '.mp4'
         try:
             import decord
         except ImportError:
@@ -43,11 +40,30 @@ class DecordInit:
 
         if self.file_client is None:
             self.file_client = FileClient(self.io_backend, **self.kwargs)
+        file_obj = io.BytesIO(self.file_client.get(filename))
+        container = decord.VideoReader(file_obj, num_threads=1)
+        return container
 
-        file_obj = io.BytesIO(self.file_client.get(results['filename']))
-        container = decord.VideoReader(file_obj, num_threads=self.num_threads)
-        results['video_reader'] = container
-        results['total_frames'] = len(container)
+    def __call__(self, results):
+        """Perform the Decord initialization.
+
+        Args:
+            results (dict): The resulting dict to be modified and passed
+                to the next transform in pipeline.
+        """
+        if 'filename' not in results:
+            assert 'frame_dir' in results
+            results['filename'] = results['frame_dir'] + '.mp4'
+
+        results['video_reader'] = self._get_videoreader(results['filename'])
+        if 'total_frames' in results:
+
+            assert results['total_frames'] == len(results['video_reader']), (
+                'SkeFrames', results['total_frames'], 'VideoFrames', len(results['video_reader'])
+            )
+        else:
+            results['total_frames'] = len(results['video_reader'])
+
         return results
 
     def __repr__(self):
@@ -78,6 +94,20 @@ class DecordDecode:
         self.mode = mode
         assert mode in ['accurate', 'efficient']
 
+    def _decord_load_frames(self, container, frame_inds):
+        if self.mode == 'accurate':
+            imgs = container.get_batch(frame_inds).asnumpy()
+            imgs = list(imgs)
+        elif self.mode == 'efficient':
+            # This mode is faster, however it always returns I-FRAME
+            container.seek(0)
+            imgs = list()
+            for idx in frame_inds:
+                container.seek(idx)
+                frame = container.next()
+                imgs.append(frame.asnumpy())
+        return imgs
+
     def __call__(self, results):
         """Perform the Decord decoding.
 
@@ -91,18 +121,7 @@ class DecordDecode:
             results['frame_inds'] = np.squeeze(results['frame_inds'])
 
         frame_inds = results['frame_inds']
-
-        if self.mode == 'accurate':
-            imgs = container.get_batch(frame_inds).asnumpy()
-            imgs = list(imgs)
-        elif self.mode == 'efficient':
-            # This mode is faster, however it always returns I-FRAME
-            container.seek(0)
-            imgs = list()
-            for idx in frame_inds:
-                container.seek(idx)
-                frame = container.next()
-                imgs.append(frame.asnumpy())
+        imgs = self._decord_load_frames(container, frame_inds)
 
         results['video_reader'] = None
         del container

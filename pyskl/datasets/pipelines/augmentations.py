@@ -13,10 +13,6 @@ def _combine_quadruple(a, b):
     return (a[0] + a[2] * b[0], a[1] + a[3] * b[1], a[2] * b[2], a[3] * b[3])
 
 
-def _flip_quadruple(a):
-    return (1 - a[0] - a[2], a[1], a[2], a[3])
-
-
 @PIPELINES.register_module()
 class PoseCompact:
     """Convert the coordinates of keypoints to make it more compact.
@@ -643,7 +639,7 @@ class Normalize:
     def __call__(self, results):
         modality = results['modality']
 
-        if modality == 'RGB':
+        if modality == 'RGB' or 'RGB' in modality:
             n = len(results['imgs'])
             h, w, c = results['imgs'][0].shape
             imgs = np.empty((n, h, w, c), dtype=np.float32)

@@ -11,6 +11,51 @@ from ..builder import BACKBONES
 from .resnet3d import ResNet3d
 
 
+class DeConvModule(nn.Module):
+
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 kernel_size,
+                 stride=(1, 1, 1),
+                 padding=0,
+                 bias=False,
+                 with_bn=True,
+                 with_relu=True):
+        super().__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+        self.bias = bias
+        self.with_bn = with_bn
+        self.with_relu = with_relu
+
+        self.conv = nn.ConvTranspose3d(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride=stride,
+            padding=padding,
+            bias=bias)
+        self.bn = nn.BatchNorm3d(out_channels)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        # x should be a 5-d tensor
+        assert len(x.shape) == 5
+        N, C, T, H, W = x.shape
+        out_shape = (N, self.out_channels, self.stride[0] * T,
+                     self.stride[1] * H, self.stride[2] * W)
+        x = self.conv(x, output_size=out_shape)
+        if self.with_bn:
+            x = self.bn(x)
+        if self.with_relu:
+            x = self.relu(x)
+        return x
+
+
 class ResNet3dPathway(ResNet3d):
     """A pathway of Slowfast based on ResNet3d.
 
@@ -26,71 +71,99 @@ class ResNet3dPathway(ResNet3d):
 
     def __init__(self,
                  lateral=False,
+                 lateral_inv=False,
                  speed_ratio=8,
                  channel_ratio=8,
                  fusion_kernel=7,
+                 lateral_infl=2,
+                 lateral_activate=[1, 1, 1, 1],
                  **kwargs):
         self.lateral = lateral
+        self.lateral_inv = lateral_inv
         self.speed_ratio = speed_ratio
         self.channel_ratio = channel_ratio
         self.fusion_kernel = fusion_kernel
+        self.lateral_infl = lateral_infl
+        self.lateral_activate = lateral_activate
+        self.calculate_lateral_inplanes(kwargs)
+
         super().__init__(**kwargs)
         self.inplanes = self.base_channels
-        if self.lateral:
-            self.conv1_lateral = ConvModule(
-                self.inplanes // self.channel_ratio,
-                self.inplanes * 2 // self.channel_ratio,
-                kernel_size=(fusion_kernel, 1, 1),
-                stride=(self.speed_ratio, 1, 1),
-                padding=((fusion_kernel - 1) // 2, 0, 0),
-                bias=False,
-                conv_cfg=self.conv_cfg,
-                norm_cfg=None,
-                act_cfg=None)
+
+        if self.lateral and self.lateral_activate[0] == 1:
+            if self.lateral_inv:
+                self.conv1_lateral = DeConvModule(
+                    self.inplanes * self.channel_ratio,
+                    self.inplanes * self.channel_ratio // self.lateral_infl,
+                    kernel_size=(fusion_kernel, 1, 1),
+                    stride=(self.speed_ratio, 1, 1),
+                    padding=((fusion_kernel - 1) // 2, 0, 0),
+                    with_bn=True,
+                    with_relu=True)
+            else:
+                self.conv1_lateral = ConvModule(
+                    self.inplanes // self.channel_ratio,
+                    self.inplanes * lateral_infl // self.channel_ratio,
+                    kernel_size=(fusion_kernel, 1, 1),
+                    stride=(self.speed_ratio, 1, 1),
+                    padding=((fusion_kernel - 1) // 2, 0, 0),
+                    bias=False,
+                    conv_cfg=self.conv_cfg,
+                    norm_cfg=None,
+                    act_cfg=None)
 
         self.lateral_connections = []
+
         for i in range(len(self.stage_blocks)):
             planes = self.base_channels * 2**i
             self.inplanes = planes * self.block.expansion
 
-            if lateral and i != self.num_stages - 1:
+            if lateral and i != self.num_stages - 1 and self.lateral_activate[i + 1]:
                 # no lateral connection needed in final stage
                 lateral_name = f'layer{(i + 1)}_lateral'
-                setattr(
-                    self, lateral_name,
-                    ConvModule(
+                if self.lateral_inv:
+                    conv_module = DeConvModule(
+                        self.inplanes * self.channel_ratio,
+                        self.inplanes * self.channel_ratio // self.lateral_infl,
+                        kernel_size=(fusion_kernel, 1, 1),
+                        stride=(self.speed_ratio, 1, 1),
+                        padding=((fusion_kernel - 1) // 2, 0, 0),
+                        bias=False,
+                        with_bn=True,
+                        with_relu=True)
+                else:
+                    conv_module = ConvModule(
                         self.inplanes // self.channel_ratio,
-                        self.inplanes * 2 // self.channel_ratio,
+                        self.inplanes * lateral_infl // self.channel_ratio,
                         kernel_size=(fusion_kernel, 1, 1),
                         stride=(self.speed_ratio, 1, 1),
                         padding=((fusion_kernel - 1) // 2, 0, 0),
                         bias=False,
                         conv_cfg=self.conv_cfg,
                         norm_cfg=None,
-                        act_cfg=None))
+                        act_cfg=None)
+                setattr(self, lateral_name, conv_module)
                 self.lateral_connections.append(lateral_name)
 
-    def make_res_layer(self,
-                       block,
-                       inplanes,
-                       planes,
-                       blocks,
-                       **kwargs):
-        """
-        Build residual layer for Slowfast. Basically, it's the same as ResNet3d make_res_layer.
-        However, the inplanes used will be: self.lateral * inplanes * (2 // self.channel_ratio) + inplanes.
-
-        Args:
-            block (nn.Module): Residual module to be built.
-            inplanes (int): Number of channels for the input feature in each block.
-            planes (int): Number of channels for the output feature in each block.
-            blocks (int): Number of residual blocks.
-
-        Returns:
-            nn.Module: A residual layer for the given config.
-        """
-        lateral_inplanes = inplanes * 2 // self.channel_ratio if self.lateral else 0
-        return super().make_res_layer(block, inplanes + lateral_inplanes, planes, blocks)
+    def calculate_lateral_inplanes(self, kwargs):
+        depth = kwargs.get('depth', 50)
+        expansion = 1 if depth < 50 else 4
+        base_channels = kwargs.get('base_channels', 64)
+        lateral_inplanes = []
+        for i in range(kwargs.get('num_stages', 4)):
+            if expansion % 2 == 0:
+                planes = base_channels * (2 ** i) * ((expansion // 2) ** (i > 0))
+            else:
+                planes = base_channels * (2 ** i) // (2 ** (i > 0))
+            if self.lateral and self.lateral_activate[i]:
+                if self.lateral_inv:
+                    lateral_inplane = planes * self.channel_ratio // self.lateral_infl
+                else:
+                    lateral_inplane = planes * self.lateral_infl // self.channel_ratio
+            else:
+                lateral_inplane = 0
+            lateral_inplanes.append(lateral_inplane)
+        self.lateral_inplanes = lateral_inplanes
 
     def inflate_weights(self, logger):
         """Inflate the resnet2d parameters to resnet3d pathway.
