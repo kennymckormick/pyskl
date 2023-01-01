@@ -8,6 +8,33 @@ from ..builder import BACKBONES, build_model
 from ..gcns.utils import unit_tcn
 
 
+class MHSA(nn.Module):
+
+    def __init__(self, dim, heads=8, dropout=0, bias=True, bias_kv=False, reduction=2):
+        super().__init__()
+        self.dim = dim
+        self.heads = heads
+        self.dim_head = dim // reduction
+        inner_dim = self.dim_head * heads
+        self.inner_dim = inner_dim
+        self.dropout = dropout
+        self.bias = bias
+        self.bias_kv = bias_kv
+
+        self.scale = self.dim_head ** -0.5
+        self.norm = nn.LayerNorm(dim)
+
+        self.attend = nn.Softmax(dim=-1)
+
+        self.q_proj = nn.Linear(dim, inner_dim, bias=bias)
+        self.k_proj = nn.Linear(dim, inner_dim, bias=bias_kv)
+        self.v_proj = nn.Linear(dim, inner_dim, bias=bias_kv)
+        self.to_out = nn.Linear(inner_dim, dim, bias=bias)
+
+    def forward(self, x):
+        pass
+
+
 class TransformerEncoderLayer(nn.Module):
 
     def __init__(self,
@@ -23,9 +50,8 @@ class TransformerEncoderLayer(nn.Module):
                  bias_kv=False,
                  **kwargs):
         super(TransformerEncoderLayer, self).__init__()
-        kv_dim = dim * heads // reduction
         self.self_attn = MultiheadAttention(
-            dim, heads, dropout=dropout, bias=bias, add_bias_kv=bias_kv, kdim=kv_dim, vdim=kv_dim, batch_first=True)
+            dim, heads, dropout=dropout, bias=bias, bias_kv=bias_kv, reduction=reduction)
 
         dim_ffn = int(dim * mlp_ratio)
         self.linear1 = nn.Linear(dim, dim_ffn)
@@ -45,7 +71,7 @@ class TransformerEncoderLayer(nn.Module):
         self.act = nn.ReLU() if activation == 'relu' else nn.GELU()
 
     def _sa_block(self, x):
-        x = self.self_attn(x, x, x)[0]
+        x = self.self_attn(x)[0]
         return self.dropout1(x)
 
     def _ff_block(self, x):
