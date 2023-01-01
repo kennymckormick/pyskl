@@ -118,14 +118,22 @@ class SkeleTR_neck(nn.Module):
         ]
     }
 
+    def _count_g(self, s, T=15, V=17):
+        if len(s) != 2:
+            return -1
+        try:
+            temporal = T if s[0] == 'T' else int(s[0])
+            spatial = {'1': 1, 'P': 5, 'V': V}[s[1]]
+            return spatial * temporal
+        except:  # noqa: E722
+            return -1
+
     def _legal_g(self, s):
-        if '+' in s:
-            grans = s.split('+')
-            for s in grans:
-                if not (len(s) == 2 and s[0] in '124T' and s[1] in '1PV'):
-                    return False
-            return True
-        return len(s) == 2 and s[0] in '124T' and s[1] in '1PV'
+        grans = s.split('+')
+        for g in grans:
+            if self._count_g(g) == -1:
+                return False
+        return True
 
     def partial_pool(self, x, gstr):
         # The shape of x should be (N, M, T, V, C)
@@ -274,4 +282,10 @@ class SkeleTR(nn.Module):
         x = self.neck(x, stinfo=stinfo)
         x = self.tr(x)
 
-        return x
+        cls_token = None
+        if self.neck.with_cls_token:
+            cls_token = x[:, 0]
+            x = x[:, 1:]
+        x = x.reshape(N, M, -1, C).mean(dim=2)
+
+        return cls_token, x
