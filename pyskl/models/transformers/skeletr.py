@@ -52,7 +52,7 @@ class TransformerEncoderLayer(nn.Module):
         x = self.linear2(self.dropout(self.act(self.linear1(x))))
         return self.dropout2(x)
 
-    def forward(self, x):
+    def forward(self, x, **kwargs):
         if self.ln_type == 'preln':
             x = x + self._sa_block(self.norm1(x))
             x = x + self._ff_block(self.norm2(x))
@@ -86,7 +86,7 @@ class SkeleTR_neck(nn.Module):
         ]
     }
 
-    def _legal_g(s):
+    def _legal_g(self, s):
         if '+' in s:
             grans = s.split('+')
             for s in grans:
@@ -97,7 +97,7 @@ class SkeleTR_neck(nn.Module):
 
     def partial_pool(self, x, gstr):
         # The shape of x should be (N, M, T, V, C)
-        assert self._legal_g(type) and len(x.shape) == 5
+        assert self._legal_g(gstr) and len(x.shape) == 5
         N, M, T, V, C = x.shape
         t_byte = gstr[0]
         if t_byte != 'T':
@@ -121,8 +121,9 @@ class SkeleTR_neck(nn.Module):
         return torch.cat(results, dim=2)
 
     def __init__(self, layout, dim, granularity='11', embed_type=None, with_cls_token=False):
+        super().__init__()
         self.layout = layout
-        self.part_defn = self.part_defn_dict(layout)
+        self.part_defn = self.part_defn_dict[layout]
         self.granularity = granularity
         self.embed_type = embed_type
         self.with_cls_token = with_cls_token
