@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 from mmcv.runner import load_checkpoint
-from torch.nn import MultiheadAttention
 
 from ...utils import cache_checkpoint
 from ..builder import BACKBONES, build_model
@@ -15,24 +14,32 @@ class MHSA(nn.Module):
         self.dim = dim
         self.heads = heads
         self.dim_head = dim // reduction
-        inner_dim = self.dim_head * heads
-        self.inner_dim = inner_dim
-        self.dropout = dropout
+        self.inner_dim = self.dim_head * heads
+        self.dropout = nn.Dropout(dropout)
         self.bias = bias
         self.bias_kv = bias_kv
 
         self.scale = self.dim_head ** -0.5
-        self.norm = nn.LayerNorm(dim)
-
         self.attend = nn.Softmax(dim=-1)
 
-        self.q_proj = nn.Linear(dim, inner_dim, bias=bias)
-        self.k_proj = nn.Linear(dim, inner_dim, bias=bias_kv)
-        self.v_proj = nn.Linear(dim, inner_dim, bias=bias_kv)
-        self.to_out = nn.Linear(inner_dim, dim, bias=bias)
+        self.q_proj = nn.Linear(dim, self.inner_dim, bias=bias)
+        self.k_proj = nn.Linear(dim, self.inner_dim, bias=bias_kv)
+        self.v_proj = nn.Linear(dim, self.inner_dim, bias=bias_kv)
+        self.to_out = nn.Linear(self.inner_dim, dim, bias=bias)
 
     def forward(self, x):
-        pass
+        N, M, C = x.shape
+        q = self.q_proj(x).reshape((N, M, self.heads, self.dim_head))
+        k = self.k_proj(x).reshape((N, M, self.heads, self.dim_head))
+        v = self.v_proj(x).reshape((N, M, self.heads, self.dim_head))
+
+        dots = torch.einsum('nthc,nshc->nhts', q, k) * self.scale
+        attn = self.attend(dots)
+        attn = self.dropout(attn)
+
+        out = torch.einsum('nhts,nshc->nthc', attn, v)
+        out = torch.reshape(out, (N, M, -1))
+        return self.to_out(out)
 
 
 class TransformerEncoderLayer(nn.Module):
@@ -50,8 +57,7 @@ class TransformerEncoderLayer(nn.Module):
                  bias_kv=False,
                  **kwargs):
         super(TransformerEncoderLayer, self).__init__()
-        self.self_attn = MultiheadAttention(
-            dim, heads, dropout=dropout, bias=bias, bias_kv=bias_kv, reduction=reduction)
+        self.self_attn = MHSA(dim, heads, dropout=dropout, bias=bias, bias_kv=bias_kv, reduction=reduction)
 
         dim_ffn = int(dim * mlp_ratio)
         self.linear1 = nn.Linear(dim, dim_ffn)
