@@ -286,6 +286,6 @@ class SkeleTR(nn.Module):
         if self.neck.with_cls_token:
             cls_token = x[:, 0]
             x = x[:, 1:]
-        x = x.reshape(N, M, -1, C).mean(dim=2)
+        x = x.reshape(N, M, -1, x.shape[-1]).mean(dim=2)
 
         return cls_token, x
