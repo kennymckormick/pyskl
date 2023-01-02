@@ -182,16 +182,9 @@ class AVAPoseDataset(BaseDataset):
 
         assert len(results[0].shape) in [1, 2]
         if len(results[0].shape) == 1:
-            cls_AP = ava_map(results, names, self.reweight)
-            eval_results = self.parse_eval_results(cls_AP, logger)
+            eval_results = ava_map(results, names, self.reweight)
         elif len(results[0].shape) == 2:
-            num_batches = results[0].shape[0]
-            eval_results = {}
-            for i in range(num_batches):
-                results_batch = [x[i] for x in results]
-                cls_AP = ava_map(results_batch, names, self.reweight)
-                eval_results_batch = self.parse_eval_results(cls_AP, logger, prefix=i)
-                eval_results.update(eval_results_batch)
+            raise NotImplementedError
 
         if file_name is not None:
             os.remove(file_name)

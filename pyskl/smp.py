@@ -104,7 +104,7 @@ def load_label(ann, split=None):
             data = [x for x in annotations if x[key_name] in split]
         return [x['label'] for x in data]
     else:
-        raise NotImplemented
+        raise NotImplementedError
 
 def mean_acc(pred, label, with_class_acc=False):
     hits = defaultdict(list)
