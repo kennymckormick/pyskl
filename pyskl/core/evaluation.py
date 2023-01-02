@@ -1,6 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import datetime
 import numpy as np
+import os
 from mmcv.runner import DistEvalHook as BasicDistEvalHook
+
+from .eval_ava import eval_ava
 
 
 class DistEvalHook(BasicDistEvalHook):
@@ -212,3 +216,27 @@ def binary_precision_recall_curve(y_score, y_true):
     sl = slice(last_ind, None, -1)
 
     return np.r_[precision[sl], 1], np.r_[recall[sl], 0], thresholds[sl]
+
+
+def ava_map(scores, names, reweight=None, thre=0.0001, pose_only=True,
+            label_file='data/ava/label_map.txt',
+            ann_file='data/ava/val_v22.csv',
+            exclude_file='data/ava/val_exclude_v22.csv'):
+
+    lines = []
+    for name, pred in zip(names, scores):
+        if name == 'NA':
+            continue
+        fd = [name[:11]] + name[12:].split('_')
+        fd[2:] = [x[0] + '.' + x[1:] for x in fd[2:]]
+        for i, p in enumerate(pred):
+            if reweight is not None:
+                p = p * reweight[name]
+            if p >= thre:
+                lines.append(','.join(fd + [str(i), f'{p:.4f}']))
+    file_name = datetime.now().strftime('.%y%m%d_%H%M%S') + '.csv'
+    with open(file_name, 'w') as f:
+        f.write('\n'.join(lines))
+    ret = eval_ava(file_name, label_file, ann_file, exclude_file, ignore_empty_frames=pose_only)
+    os.remove(file_name)
+    return ret

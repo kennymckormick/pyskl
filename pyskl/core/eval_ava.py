@@ -1,48 +1,14 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # This piece of code is directly adapted from ActivityNet official repo
-# https://github.com/activitynet/ActivityNet/blob/master/
-# Evaluation/get_ava_performance.py. Some unused codes are removed.
-import csv
+# https://github.com/activitynet/ActivityNet/blob/master/Evaluation/get_ava_performance.py.
+# Some unused codes are removed.
 import multiprocessing
 import numpy as np
 import time
 from collections import defaultdict
 
+from pyskl.smp import mrlines
 from .ava_utils import metrics, np_box
-
-
-def det2csv(results):
-    """Convert detection results to csv file."""
-    csv_results = []
-    for idx in range(len(results)):
-        video_id = results[idx]['video_id']
-        timestamp = results[idx]['timestamp']
-        result = results[idx]['outputs']
-        for label, _ in enumerate(result):
-            for bbox in result[label]:
-                bbox_ = tuple(bbox.tolist())
-                actual_label = label + 1
-                csv_results.append((video_id, timestamp) + bbox_[:4] + (actual_label, ) + bbox_[4:])
-    return csv_results
-
-
-# results is organized by class
-def results2csv(results, out_file):
-    """Convert detection results to csv file."""
-
-    results = [dict()]
-    csv_results = det2csv(results)
-
-    # save space for float
-    def to_str(item):
-        if isinstance(item, float):
-            return f'{item:.4f}'
-        return str(item)
-
-    with open(out_file, 'w') as f:
-        for csv_result in csv_results:
-            f.write(','.join(map(to_str, csv_result)))
-            f.write('\n')
 
 
 def print_time(message, start):
@@ -56,30 +22,19 @@ def make_image_key(video_id, timestamp):
 
 
 def read_csv(csv_file, class_whitelist=None):
-    """Loads boxes and class labels from a CSV file in the AVA format.
-
-    CSV file format described at https://research.google.com/ava/download.html.
-
-    Args:
-        csv_file: A file object.
-        class_whitelist: If provided, boxes corresponding to (integer) class
-        labels not in this set are skipped.
-
-    Returns:
-        boxes: A dictionary mapping each unique image key (string) to a list of
-        boxes, given as coordinates [y1, x1, y2, x2].
-        labels: A dictionary mapping each unique image key (string) to a list
-        of integer class labels, matching the corresponding box in `boxes`.
-        scores: A dictionary mapping each unique image key (string) to a list
-        of score values labels, matching the corresponding label in `labels`.
-        If scores are not provided in the csv, then they will default to 1.0.
-    """
     entries = defaultdict(list)
     boxes = defaultdict(list)
     labels = defaultdict(list)
     scores = defaultdict(list)
-    reader = csv.reader(csv_file)
-    for row in reader:
+
+    if isinstance(csv_file, list):
+        lines = csv_file
+    else:
+        lines = mrlines(csv_file)
+    lines = [x for x in lines if not x.startswith('NA,')]
+    lines = [x.split(',') for x in lines]
+
+    for row in lines:
         assert len(row) in [7, 8], 'Wrong number of columns: ' + row
         image_key = make_image_key(row[0], row[1])
         x1, y1, x2, y2 = [float(n) for n in row[2:6]]
@@ -115,10 +70,9 @@ def read_exclusions(exclusions_file):
         or an empty set if exclusions file is None.
     """
     excluded = set()
-    if exclusions_file:
-        reader = csv.reader(exclusions_file)
-    for row in reader:
-        assert len(row) == 2, f'Expected only 2 columns, got: {row}'
+    lines = mrlines(exclusions_file)
+    for row in lines:
+        row = row.split(',')
         excluded.add(make_image_key(row[0], row[1]))
     return excluded
 
@@ -195,10 +149,10 @@ def tpfp_single(tup, threshold=0.5):
 
 
 # Seems there is at most 100 detections for each image
-def ava_eval(result_file,
-             label_file,
-             ann_file,
-             exclude_file,
+def eval_ava(result_file,
+             label_file='data/ava/label_map.txt',
+             ann_file='data/ava/ava_val_v2.2.csv',
+             exclude_file='data/ava/ava_val_excluded_timestamps_v2.2.csv',
              ignore_empty_frames=True):
     """Perform ava evaluation."""
 
