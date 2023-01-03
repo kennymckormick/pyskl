@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 from mmcv.cnn import normal_init
 
@@ -56,15 +55,8 @@ class SimpleHead(BaseHead):
             torch.Tensor: The classification scores for input samples.
         """
 
-        if isinstance(x, list):
-            for item in x:
-                assert len(item.shape) == 2
-            x = [item.mean(dim=0) for item in x]
-            x = torch.stack(x)
-
-        if len(x.shape) != 2:
+        if len(x.shape) == 5:
             if self.mode == '2D':
-                assert len(x.shape) == 5
                 N, S, C, H, W = x.shape
                 pool = nn.AdaptiveAvgPool2d(1)
                 x = x.reshape(N * S, C, H, W)
@@ -73,8 +65,6 @@ class SimpleHead(BaseHead):
                 x = x.mean(dim=1)
             if self.mode == '3D':
                 pool = nn.AdaptiveAvgPool3d(1)
-                if isinstance(x, tuple) or isinstance(x, list):
-                    x = torch.cat(x, dim=1)
                 x = pool(x)
                 x = x.view(x.shape[:2])
             if self.mode == 'GCN':
