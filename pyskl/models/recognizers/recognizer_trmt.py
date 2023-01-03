@@ -20,11 +20,6 @@ class RecognizerTRMT(BaseRecognizer):
         # record the source of the backbone
         self.backbone = builder.build_backbone(backbone)
 
-        if isinstance(cls_head, dict):
-            if cls_head['type'] == 'MetaHead':
-                self.num_classes = {k: cls_head[k]['num_classes'] for k in cls_head if isinstance(cls_head[k], dict)}
-            else:
-                self.num_classes = cls_head['num_classes']
         # If head == MetaHead, then meta_head takes over the post-processing, x[:, 0] for Kinetics, x[:, 1:] for AVA
         # otherwise, the Recognizer takes over the post-processing
         self.cls_head = builder.build_head(cls_head) if cls_head else None
@@ -160,46 +155,52 @@ class RecognizerTRMT(BaseRecognizer):
         cls_token, x = self.extract_feat(keypoint, stinfo)  # Aug, C; Aug, M, C
 
         tags = img_metas[0]['tag']
-        # Sanity Check
-        tags_set = set(tags)
-        for meta in img_metas:
-            assert set(meta['tag']) == tags_set
 
         meta_head = getattr(self.cls_head, 'meta_head', False)
         if meta_head:
+            result = dict()
             cls_score = self.cls_head(cls_token, x, tags)
-
-        for tag in tags:
-            num_classes = self.num_classes[tag] if isinstance(self.num_classes, dict) else self.num_classes
-
-            # The shape here is Aug, Ske, C
-            meta_head = getattr(self.cls_head, 'meta_head', False)
-            if meta_head:
-                cls_score = self.cls_head(cls_score, x, tag)
+            if isinstance(name, dict):
+                for tag, n in name.items():
+                    if tag in cls_score:
+                        score = cls_score[tag]
+                        if isinstance(n, str):
+                            assert len(score.shape) == 2
+                            score = nn.Softmax(dim=-1)(score).mean(dim=0)[None].data.cpu().numpy().astype(np.float16)
+                            result[tag] = (n, score)
+                        elif isinstance(n, np.ndarray):
+                            assert len(score.shape) == 3
+                            score = nn.Sigmoid()(score).data.cpu().numpy().astype(np.float16)
+                            result[tag] = (n, score)
+                return [result]
+            elif isinstance(name, str):
+                assert len(cls_score) == 1 and len(tags) == 1
+                result = cls_score[tags[0]]
+                assert len(result.shape) == 2
+                result = nn.Softmax(dim=-1)(result).mean(dim=0)[None].data.cpu().numpy().astype(np.float16)
+                return [(name, result)]
+            elif isinstance(name, np.ndarray):
+                assert len(cls_score) == 1 and len(tags) == 1
+                result = cls_score[tags[0]]
+                assert len(result.shape) == 3
+                result = nn.Sigmoid()(result).data.cpu().numpy().astype(np.float16)
+                return [(name, result)]
             else:
-                cls_score = self.cls_head(x)
-
+                raise NotImplementedError
+        else:
+            assert not isinstance(name, dict)
             if isinstance(name, np.ndarray):
-                if self.with_cls_token:
-                    cls_score = cls_score[:, 1:]
+                cls_score = self.cls_head(x)
                 cls_score = nn.Sigmoid()(cls_score).data.cpu().numpy().astype(np.float16)
-                if cls_score.shape[-1] > num_classes:
-                    assert cls_score.shape[-1] % num_classes == 0
-                    cls_score = cls_score.reshape((-1, cls_score.shape[-1] // num_classes, num_classes))
-                else:
-                    cls_score = cls_score.reshape((-1, cls_score.shape[-1]))
-                name = name.reshape(-1)
-                return [(cls_score, name)]
-            else:
-                if self.with_cls_token:
-                    cls_score = cls_score[:, 0]
-                else:
+                return [(name, cls_score)]
+            elif isinstance(name, str):
+                cls_score = self.cls_head(cls_token if cls_token is not None else x)
+                if len(cls_score.shape) == 3:
                     cls_score = cls_score.mean(dim=1)
-                if cls_score.shape[-1] > num_classes:
-                    cls_score = cls_score.reshape((-1, cls_score.shape[-1] // num_classes, num_classes))
-
-                cls_score = nn.Softmax(dim=-1)(cls_score).mean(dim=0)[None]
-                return cls_score.data.cpu().numpy().astype(np.float16)
+                cls_score = nn.Softmax(dim=-1)(cls_score).mean(dim=0)[None].data.cpu().numpy().astype(np.float16)
+                return [(name, cls_score)]
+            else:
+                raise NotImplementedError
 
     def forward(self, keypoint, stinfo=None, return_loss=True, **kwargs):
         """Define the computation performed at every call."""
