@@ -144,7 +144,7 @@ def main():
 
         pose_results = pose_inference(pose_model, frames, det_results)
         shape = frames[0].shape[:2]
-        anno['img_shape'] = anno['original_shape'] = shape
+        anno['img_shape'] = shape
         anno['total_frames'] = len(frames)
         anno['num_person_raw'] = pose_results.shape[0]
         anno['keypoint'] = pose_results[..., :2].astype(np.float16)

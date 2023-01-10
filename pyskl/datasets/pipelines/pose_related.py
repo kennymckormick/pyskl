@@ -436,7 +436,7 @@ class DecompressPose:
     """Load Compressed Pose
 
     In compressed pose annotations, each item contains the following keys:
-    Original keys: 'label', 'frame_dir', 'img_shape', 'original_shape', 'total_frames'
+    Original keys: 'label', 'frame_dir', 'img_shape', 'total_frames'
     New keys: 'frame_inds', 'keypoint', 'anno_inds'.
     This operation: 'frame_inds', 'keypoint', 'total_frames', 'anno_inds'
          -> 'keypoint', 'keypoint_score', 'total_frames'

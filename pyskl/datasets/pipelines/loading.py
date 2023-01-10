@@ -80,7 +80,7 @@ class DecordDecode:
     Decord: https://github.com/dmlc/decord
 
     Required keys are "video_reader", "filename" and "frame_inds",
-    added or modified keys are "imgs" and "original_shape".
+    added or modified keys are "imgs" and "img_shape".
 
     Args:
         mode (str): Decoding mode. Options are 'accurate' and 'efficient'.
@@ -127,7 +127,6 @@ class DecordDecode:
         del container
 
         results['imgs'] = imgs
-        results['original_shape'] = imgs[0].shape[:2]
         results['img_shape'] = imgs[0].shape[:2]
 
         return results
@@ -142,7 +141,7 @@ class ArrayDecode:
     """Load and decode frames with given indices from a 4D array.
 
     Required keys are "array and "frame_inds", added or modified keys are
-    "imgs", "img_shape" and "original_shape".
+    "imgs", "img_shape".
     """
 
     def __call__(self, results):
@@ -175,7 +174,6 @@ class ArrayDecode:
                 raise NotImplementedError
 
         results['imgs'] = imgs
-        results['original_shape'] = imgs[0].shape[:2]
         results['img_shape'] = imgs[0].shape[:2]
 
         return results

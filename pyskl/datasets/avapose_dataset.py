@@ -129,7 +129,6 @@ class AVAPoseDataset(BaseDataset):
         results['clip_start'] = sample[1]
         results['clip_length'] = self.clip_length
         results['img_shape'] = img_shape
-        results['original_shape'] = img_shape
         results['data'] = clip
         results['modality'] = self.modality
         return results

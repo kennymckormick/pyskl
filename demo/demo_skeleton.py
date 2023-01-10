@@ -258,7 +258,6 @@ def main():
         frame_dir='',
         label=-1,
         img_shape=(h, w),
-        original_shape=(h, w),
         start_index=0,
         modality='Pose',
         total_frames=num_frame)

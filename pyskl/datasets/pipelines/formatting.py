@@ -86,10 +86,9 @@ class Collect:
     This keeps the items in ``keys`` as it is, and collect items in
     ``meta_keys`` into a meta item called ``meta_name``.This is usually
     the last stage of the data loader pipeline.
-    For example, when keys='imgs', meta_keys=('filename', 'label',
-    'original_shape'), meta_name='img_metas', the results will be a dict with
-    keys 'imgs' and 'img_metas', where 'img_metas' is a DataContainer of
-    another dict with keys 'filename', 'label', 'original_shape'.
+    For example, when keys='imgs', meta_keys=('filename', 'label'),
+    meta_name='img_metas', the results will be a dict with keys 'imgs' and 'img_metas',
+    where 'img_metas' is a DataContainer of another dict with keys 'filename', 'label'.
 
     Args:
         keys (Sequence[str]): Required keys to be collected.
@@ -102,10 +101,8 @@ class Collect:
 
             - "filename": path to the image file
             - "label": label of the image file
-            - "original_shape": original shape of the image as a tuple
-                (h, w, c)
             - "img_shape": shape of the image input to the network as a tuple
-                (h, w, c).  Note that images may be zero padded on the
+                (h, w).  Note that images may be zero padded on the
                 bottom/right, if the batch tensor is larger than this shape.
             - "pad_shape": image shape after padding
             - "flip_direction": a str in ("horiziontal", "vertival") to
@@ -120,8 +117,7 @@ class Collect:
 
     def __init__(self,
                  keys,
-                 meta_keys=('filename', 'label', 'original_shape', 'img_shape',
-                            'pad_shape', 'flip_direction', 'img_norm_cfg'),
+                 meta_keys=('filename', 'label', 'img_shape', 'pad_shape', 'flip_direction', 'img_norm_cfg'),
                  meta_name='img_metas',
                  nested=False):
         self.keys = keys

@@ -124,7 +124,6 @@ class MMDecode(DecordInit, DecordDecode, PoseDecode):
                 results['keypoint'][..., 1] *= (nh / oh)
 
                 results['img_shape'] = real_img_shape
-                results['original_shape'] = real_img_shape
 
         return results
 
