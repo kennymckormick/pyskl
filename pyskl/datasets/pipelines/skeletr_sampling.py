@@ -284,7 +284,7 @@ class KineticsSSampling(UniformSampleFrames):
         if 'score' in self.track_method:
             score_rank = results.pop('score_rank', self._get_score_rank(keypoint, ind2info))
 
-        prevnext = results.pop('iouthr_prevnext', None)
+        prevnext = results.pop('iouthr_pn', None)
         if prevnext is not None:
             assert prevnext.shape[:2] == (6, 2, keypoint.shape[0])
             prevnext = prevnext[self.iou_thre]
