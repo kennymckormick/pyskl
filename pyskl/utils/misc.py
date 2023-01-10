@@ -7,6 +7,7 @@ import numpy as np
 import os
 import os.path as osp
 import socket
+import time
 from mmcv import load
 from mmcv.runner import get_dist_info
 from mmcv.utils import get_logger
@@ -28,6 +29,7 @@ def cache_file(arg_tuple):
         time.sleep(5)
         retry -= 1
     assert retry >= 0, 'Failed to launch memcached. '
+
     from pymemcache import serde
     from pymemcache.client.base import Client
 
