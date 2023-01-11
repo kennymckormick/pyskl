@@ -255,3 +255,4 @@ class Tag:
 
     def __call__(self, results):
         results['tag'] = self.tag
+        return results
