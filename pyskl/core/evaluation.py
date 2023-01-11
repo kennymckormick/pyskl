@@ -13,7 +13,12 @@ class DistEvalHook(BasicDistEvalHook):
     ]
     less_keys = ['loss']
 
-    def __init__(self, *args, save_best='auto', seg_interval=None, **kwargs):
+    def __init__(self, *args, save_best='auto', **kwargs):
+        seg_interval = None
+        if isinstance(kwargs['interval'], list):
+            seg_interval = kwargs['interval']
+            kwargs['interval'] = 1
+
         super().__init__(*args, save_best=save_best, **kwargs)
         self.seg_interval = seg_interval
         if seg_interval is not None:
