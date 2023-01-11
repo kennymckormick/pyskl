@@ -77,6 +77,7 @@ class RecognizerTRMT(BaseRecognizer):
 
     def forward_train(self, keypoint, stinfo, img_metas):
         """Defines the computation performed at every call when training."""
+        meta_head = getattr(self.cls_head, 'meta_head', False)
         assert self.with_cls_head
         assert keypoint.shape[1] == 1
 
@@ -89,6 +90,9 @@ class RecognizerTRMT(BaseRecognizer):
 
         # meta['label'] is a dict: {label_name: label_tensor}
         labels = [meta['label'] for meta in img_metas]
+        if not isinstance(labels[0], dict):
+            labels = [dict(label=x) for x in img_metas]
+            assert not meta_head
 
         if self.flexible_nske:
             if self.flexible_nske == 'random_select':
@@ -103,7 +107,6 @@ class RecognizerTRMT(BaseRecognizer):
         cls_token, x = self.extract_feat(keypoint, stinfo)  # N, C; N, M, C
         losses = dict()
 
-        meta_head = getattr(self.cls_head, 'meta_head', False)
         if meta_head:
             # meta['tag'] is a list of tags, it includes all tasks associated with the training sample (has GT labels)
             tags = [meta['tag'] for meta in img_metas]
