@@ -271,7 +271,7 @@ class KineticsSSampling(UniformSampleFrames):
             total_frames = np.max(ske_frame_inds) + 1
             results['ske_frame_inds'], results['total_frames'] = ske_frame_inds, total_frames
 
-        kpt_shape = keypoint[0].shape[1:]
+        kpt_shape = keypoint[0]
 
         assert keypoint.shape[0] == ske_frame_inds.shape[0]
 
