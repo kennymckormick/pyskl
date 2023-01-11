@@ -299,7 +299,7 @@ class KineticsSSampling(UniformSampleFrames):
 
         prevnext = results.pop('iouthr_pn', None)
         if prevnext is not None:
-            assert prevnext.shape[:2] == (6, 2, keypoint.shape[0])
+            assert prevnext.shape == (6, 2, keypoint.shape[0])
             prevnext = prevnext[self.iou_thre]
 
         # In train mode, we use max_skeletons
