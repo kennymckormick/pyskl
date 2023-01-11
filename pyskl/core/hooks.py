@@ -63,8 +63,8 @@ class OutputHook:
 @HOOKS.register_module()
 class MyCkptHook(CheckpointHook):
 
-    def __init__(self, interval=1):
-        super().__init__(interval=1)
+    def __init__(self, interval=1, **kwargs):
+        super().__init__(interval=1, **kwargs)
         if isinstance(interval, int):
             if interval < 1:
                 interval = 1
