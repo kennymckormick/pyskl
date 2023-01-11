@@ -1,9 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import functools
+import numpy as np
 import torch
 import warnings
+from mmcv.runner.hooks import HOOKS, CheckpointHook
 
 
+@HOOKS.register_module()
 class OutputHook:
     """Output feature map of some layers.
 
@@ -55,6 +58,31 @@ class OutputHook:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.remove()
+
+
+@HOOKS.register_module()
+class MyCkptHook(CheckpointHook):
+
+    def __init__(self, interval=1):
+        super().__init__(interval=1)
+        if isinstance(interval, int):
+            if interval < 1:
+                interval = 1
+            interval = [(0, np.Inf, interval)]
+
+        assert isinstance(interval, list)
+        for i, tup in enumerate(interval):
+            assert isinstance(tup, tuple) and len(tup) == 3 and tup[0] < tup[1]
+            if i < len(interval) - 1:
+                assert tup[1] == interval[i + 1][0]
+        assert self.by_epoch
+        self.interval = interval
+
+    def every_n_epochs(self, runner, interval):
+        cur_epoch = runner.epoch + 1
+        for s, e, n in interval:
+            if s < cur_epoch <= e:
+                return cur_epoch % n == 0 or cur_epoch == e
 
 
 # using wonder's beautiful simplification:

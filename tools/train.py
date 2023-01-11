@@ -124,6 +124,7 @@ def main():
         cfg.checkpoint_config.meta = dict(
             pyskl_version=__version__ + get_git_hash(digits=7),
             config=cfg.pretty_text)
+        cfg.checkpoint_config.type = 'MyCkptHook'
 
     test_option = dict(test_last=args.test_last, test_best=args.test_best)
 
