@@ -243,3 +243,15 @@ class FormatShape(object):
         repr_str = self.__class__.__name__
         repr_str += f"(input_format='{self.input_format}')"
         return repr_str
+
+
+@PIPELINES.register_module()
+class Tag:
+
+    def __init__(self, tag):
+        if isinstance(tag, str):
+            tag = [tag]
+        self.tag = tag
+
+    def __call__(self, results):
+        results['tag'] = self.tag
