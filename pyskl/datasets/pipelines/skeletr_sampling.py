@@ -42,7 +42,7 @@ class KineticsSSampling(UniformSampleFrames):
         assert iou_thre >= 0
 
     @staticmethod
-    def auto_box(kpts, thre=0.1, expansion=1.25, default_shape=(320, 426)):
+    def auto_box(kpts, thre=0.3, expansion=1.25, default_shape=(320, 426)):
         # It can return None if the box is too small
         assert len(kpts.shape) == 3 and kpts.shape[-1] == 3
         score = kpts[..., 2]
