@@ -126,7 +126,7 @@ class RecognizerTRMT(BaseRecognizer):
                 assert len(label) == 1 and label_name in label
             # Get Label Tensors
             labels = [x[label_name] for x in labels]
-            label = torch.stack(labels)
+            label = torch.stack(labels).to(x.device)
 
             if len(label.shape) == 4:
                 label = label[:, 0]
