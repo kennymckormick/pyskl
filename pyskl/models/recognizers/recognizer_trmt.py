@@ -91,7 +91,7 @@ class RecognizerTRMT(BaseRecognizer):
         # meta['label'] is a dict: {label_name: label_tensor}
         labels = [meta['label'] for meta in img_metas]
         if not isinstance(labels[0], dict):
-            labels = [dict(label=x) for x in img_metas]
+            labels = [dict(label=x) for x in labels]
             assert not meta_head
 
         if self.flexible_nske:
