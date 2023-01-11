@@ -7,3 +7,4 @@ from .loading import *  # noqa: F401, F403
 from .multi_modality import *  # noqa: F401, F403
 from .pose_related import *  # noqa: F401, F403
 from .sampling import *  # noqa: F401, F403
+from .skeletr_sampling import *  # noqa: F401, F403
