@@ -336,6 +336,7 @@ class KineticsSSampling(UniformSampleFrames):
             else:
                 indices = self._get_train_clips(end - start, self.clip_len)
 
+            indices = np.mod(indices, end - start)
             kpt = kpt[indices].reshape((self.num_clips, self.clip_len, *kpt_shape))
             kpt_ret.append(kpt)
 
