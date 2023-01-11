@@ -19,6 +19,7 @@ class KineticsSSampling(UniformSampleFrames):
                  step=30,
                  seed=255,
                  num_skeletons=20,
+                 squeeze=True,
                  iou_thre=0,
                  track_method='bbox'):
 
@@ -40,6 +41,7 @@ class KineticsSSampling(UniformSampleFrames):
         assert iou_thre in list(range(6))
         self.iou_thre = iou_thre
         assert iou_thre >= 0
+        self.squeeze = squeeze
 
     @staticmethod
     def auto_box(kpts, thre=0.3, expansion=1.25, default_shape=(320, 426)):
@@ -257,6 +259,17 @@ class KineticsSSampling(UniformSampleFrames):
         ske_frame_inds = results['ske_frame_inds']
         total_frames = results['total_frames']
         test_mode = results['test_mode']
+
+        def mapinds(ske_frame_inds):
+            uni = np.unique(ske_frame_inds)
+            map_ = {x: i for i, x in enumerate(uni)}
+            inds = [map_[x] for x in ske_frame_inds]
+            return np.array(inds, dtype=np.int16)
+
+        if self.squeeze:
+            ske_frame_inds = mapinds(ske_frame_inds)
+            total_frames = np.max(ske_frame_inds) + 1
+            results['ske_frame_inds'], results['total_frames'] = ske_frame_inds, total_frames
 
         kpt_shape = keypoint[0].shape[1:]
 
