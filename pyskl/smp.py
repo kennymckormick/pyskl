@@ -39,6 +39,31 @@ def mwlines(lines, fname):
     with open(fname, 'w') as fout:
         fout.write('\n'.join(lines))
 
+def lpkl(pth):
+    return pickle.load(open(pth, 'rb'))
+
+def dpkl(data, pth):
+    return pickle.dump(data, open(pth, 'wb'))
+
+def ljson(pth):
+    return json.load(open(pth, 'r'))
+
+def mload(pth):
+    assert '.' in pth
+    suff = pth.split('.')[-1]
+    assert suff in ['pkl', 'pickle', 'json', 'txt']
+    if suff == 'txt':
+        return mrlines(pth)
+    if suff == 'json':
+        return ljson(pth)
+    return lpkl(pth)
+
+def mdump(data, pth):
+    assert '.' in pth
+    suff = pth.split('.')[-1]
+    assert suff in ['pkl', 'pickle']
+    dpkl(data, pth)
+
 def default_set(self, args, name, default):
     if hasattr(args, name):
         val = getattr(args, name)
@@ -62,12 +87,6 @@ def ls(dirname='.', full=True, match=''):
 
 def add(x, y):
     return x + y
-
-def lpkl(pth):
-    return pickle.load(open(pth, 'rb'))
-
-def ljson(pth):
-    return json.load(open(pth, 'r'))
 
 def intop(pred, label, n):
     pred = [np.argsort(x)[-n:] for x in pred]
