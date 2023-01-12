@@ -154,7 +154,7 @@ class RecognizerTRMT(BaseRecognizer):
         assert len(img_metas) == 1
 
         assert 'name' in img_metas[0] or 'frame_dir' in img_metas[0]
-        name = img_metas[0].get('name', img_metas[0]['frame_dir'])
+        name = img_metas[0]['name'] if 'name' in img_metas[0] else img_metas[0]['frame_dir']
         cls_token, x = self.extract_feat(keypoint, stinfo)  # Aug, C; Aug, M, C
 
         tags = img_metas[0]['tag']
