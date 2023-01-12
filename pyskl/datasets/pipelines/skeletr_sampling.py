@@ -246,10 +246,10 @@ class KineticsSSampling(UniformSampleFrames):
             score_rank[find] = dict()
             seg = ind2info[find]
             s, e = min(seg), max(seg) + 1
-            score_sub = scores[s: e + 1]
+            score_sub = scores[s: e]
             order_sub = (-score_sub).argsort()
             rank_sub = order_sub.argsort()
-            for i in range(e - s + 1):
+            for i in range(e - s):
                 idx = s + i
                 score_rank[find][rank_sub[i]] = idx
         return score_rank
