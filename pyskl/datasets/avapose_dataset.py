@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy as cp
-import mmcv
 import numpy as np
 import os
 import os.path as osp
@@ -8,6 +7,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from ..core import ava_map
+from ..smp import mdump, mload
 from ..utils import get_root_logger
 from .base import BaseDataset
 from .builder import DATASETS
@@ -40,6 +40,7 @@ class AVAPoseDataset(BaseDataset):
                  memcached=False,
                  clip_length=10,
                  squeeze=False,
+                 reweight=None,
                  mc_cfg=('localhost', 22077),
                  **kwargs):
 
@@ -60,6 +61,7 @@ class AVAPoseDataset(BaseDataset):
         assert isinstance(self.box_thr, float)
         self.clip_length = clip_length
         self.squeeze = squeeze
+        self.reweight = mload(reweight)
 
         # Thresholding Training Examples
         for item in self.video_infos:
@@ -94,7 +96,7 @@ class AVAPoseDataset(BaseDataset):
     def load_annotations(self):
         """Load annotation file to get video information."""
         assert self.ann_file.endswith('.pkl')
-        data = mmcv.load(self.ann_file)
+        data = mload(self.ann_file)
 
         if self.split:
             split = data['split']
@@ -155,7 +157,7 @@ class AVAPoseDataset(BaseDataset):
             for s, n in zip(score, names):
                 score_collect[n[:36]].append(s)
         score_collect = {k: np.stack(v).mean(axis=0) for k, v in score_collect.items()}
-        return mmcv.dump(score_collect, out)
+        return mdump(score_collect, out)
 
     def evaluate(self, results, logger=None, **deprecated_kwargs):
         """Perform evaluation for common datasets.
@@ -172,7 +174,7 @@ class AVAPoseDataset(BaseDataset):
         if not isinstance(results, dict):
             file_name = datetime.now().strftime('%y%m%d_%H%M%S_%f') + '.pkl'
             self.dump_results(results, file_name)
-            results = mmcv.load(file_name)
+            results = mload(file_name)
 
         score_collect = results
 
