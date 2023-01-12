@@ -61,7 +61,7 @@ class AVAPoseDataset(BaseDataset):
         assert isinstance(self.box_thr, float)
         self.clip_length = clip_length
         self.squeeze = squeeze
-        self.reweight = mload(reweight)
+        self.reweight = mload(reweight) if reweight is not None else None
 
         # Thresholding Training Examples
         for item in self.video_infos:
