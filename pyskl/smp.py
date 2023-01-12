@@ -199,3 +199,6 @@ def cache_objects(mc_root, mc_cfg=('localhost', 22077), mc_size=60000, num_proc=
         mp_cache(mc_cfg, files, num_proc=num_proc)
     elif osp.isfile(mc_root):
         mp_cache_single(mc_cfg, mc_root, num_proc=num_proc)
+
+if __name__ == '__main__':
+    globals()[sys.argv[1]](*sys.argv[2:])
