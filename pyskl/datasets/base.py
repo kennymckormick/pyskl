@@ -135,6 +135,10 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
             f'The length of results is not equal to the dataset len: '
             f'{len(results)} != {len(self)}')
 
+        if isinstance(results[0], tuple):
+            if len(results[0]) == 2 and isinstance(results[0][0], str) and isinstance(results[0][1], np.ndarray):
+                results = [x[1] for x in results]
+
         if isinstance(results[0], list) or isinstance(results[0], tuple):
             num_results = len(results[0])
             eval_results = dict()
