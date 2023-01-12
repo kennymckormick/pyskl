@@ -53,13 +53,22 @@ class PoseDecode:
 class PreNormalize2D:
     """Normalize the range of keypoint values. """
 
-    def __init__(self, img_shape=(1080, 1920)):
+    def __init__(self, img_shape=(1080, 1920), threshold=0.01):
+        self.threshold = threshold
+        # Will skip points with score less than threshold
         self.img_shape = img_shape
 
     def __call__(self, results):
         h, w = results.get('img_shape', self.img_shape)
-        results['keypoint'][..., 0] = (results['keypoint'][..., 0] - (w / 2)) / (w / 2)
-        results['keypoint'][..., 1] = (results['keypoint'][..., 1] - (h / 2)) / (h / 2)
+        mask, keypoint = None, results['keypoint']
+        if keypoint.shape[-1] == 3:
+            mask = keypoint[..., 2] <= self.threshold
+        keypoint[..., 0] = (keypoint[..., 0] - (w / 2)) / (w / 2)
+        keypoint[..., 1] = (keypoint[..., 1] - (h / 2)) / (h / 2)
+        keypoint[..., 0][mask] = 0
+        keypoint[..., 1][mask] = 0
+        results['keypoint'] = keypoint
+
         return results
 
 
