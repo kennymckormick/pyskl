@@ -255,6 +255,13 @@ class KineticsSSampling(UniformSampleFrames):
         return score_rank
 
     def __call__(self, results):
+
+        if results['keypoint'].dtype == np.float16:
+            results['keypoint'] = results['keypoint'].astype(np.float32)
+
+        if 'bbox' in results and results['bbox'].dtype == np.float16:
+            results['bbox'] = results['bbox'].astype(np.float32)
+
         keypoint = results['keypoint']
         ske_frame_inds = results['ske_frame_inds']
         total_frames = results['total_frames']
@@ -446,9 +453,9 @@ class AVASSampling(UniformSampleFrames):
                 # keypoint.shape == (num_clips, T, V, C)
                 kpts.append(keypoint)
 
-        kpts = np.stack(kpts, axis=1)  # kpts.shape == (num_clips, num_skeletons, T, V, C)
+        kpts = np.stack(kpts, axis=1).astype(np.float32)  # kpts.shape == (num_clips, num_skeletons, T, V, C)
         labels = np.stack(labels)  # labels.shape == (num_skeletons, num_classes)
-        stinfo_old = np.stack(stinfos)  # stinfo_old.shape = (num_skeletons, 6)
+        stinfo_old = np.stack(stinfos).astype(np.float32)  # stinfo_old.shape = (num_skeletons, 6)
         names = np.stack(names)
 
         min_ske, max_ske, all_skeletons = self.min_skeletons, self.max_skeletons, kpts.shape[1]
