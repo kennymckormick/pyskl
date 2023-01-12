@@ -48,7 +48,7 @@ def cache_file(arg_tuple):
         assert ('frame_dir' in kv_dict[0]) != ('filename' in kv_dict[0])
         key = 'frame_dir' if 'frame_dir' in kv_dict[0] else 'filename'
         kv_dict = {x[key]: x for x in kv_dict}
-    for k, v in kv_dict.items():
+    for k, v in tqdm(kv_dict.items()):
         flag = None
         while not isinstance(flag, dict):
             try:
