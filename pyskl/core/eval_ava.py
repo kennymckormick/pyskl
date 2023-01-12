@@ -7,7 +7,7 @@ import numpy as np
 import time
 from collections import defaultdict
 
-from pyskl.smp import mrlines
+from ..smp import mrlines
 from .ava_utils import metrics, np_box
 
 

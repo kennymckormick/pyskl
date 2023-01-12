@@ -10,10 +10,10 @@ from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
 from operator import itemgetter
 
-from pyskl.core import OutputHook
-from pyskl.datasets.pipelines import Compose
-from pyskl.models import build_recognizer
-from pyskl.utils import cache_checkpoint
+from ..core import OutputHook
+from ..datasets.pipelines import Compose
+from ..models import build_recognizer
+from ..utils import cache_checkpoint
 
 
 def init_recognizer(config, checkpoint=None, device='cuda:0', **kwargs):
