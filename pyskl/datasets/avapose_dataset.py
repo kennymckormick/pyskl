@@ -152,7 +152,7 @@ class AVAPoseDataset(BaseDataset):
         score_collect = defaultdict(list)
         for item in results:
             assert isinstance(item, tuple)
-            score, names = item[0], item[1]
+            names, score = item[0], item[1]
             score = score.reshape(-1, score.shape[-1])
             names = names.reshape(-1)
             assert score.shape[0] == names.shape[0] and len(names.shape) == 1

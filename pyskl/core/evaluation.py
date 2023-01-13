@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import datetime
 import numpy as np
 import os
+from datetime import datetime
 from mmcv.runner import DistEvalHook as BasicDistEvalHook
 
 from .eval_ava import eval_ava
