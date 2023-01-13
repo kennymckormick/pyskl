@@ -64,18 +64,22 @@ class PreNormalize2D:
             warning_r0('Will use sequence bbox rather than the img_shape for normalization. ')
 
     def __call__(self, results):
-        mask, keypoint = None, results['keypoint'].astype(np.float32)
+        mask, maskout, keypoint = None, None, results['keypoint'].astype(np.float32)
         if 'keypoint_score' in results:
             keypoint_score = results.pop('keypoint_score').astype(np.float32)
             keypoint = np.concatenate([keypoint, keypoint_score[..., None]], axis=-1)
 
         if keypoint.shape[-1] == 3:
-            mask = keypoint[..., 2] <= self.threshold
+            mask = keypoint[..., 2] > self.threshold
+            maskout = keypoint[..., 2] <= self.threshold
 
         if self.mode == 'auto':
             if mask is not None:
-                x_max, x_min = np.max(keypoint[mask, 0]), np.min(keypoint[mask, 0])
-                y_max, y_min = np.max(keypoint[mask, 1]), np.min(keypoint[mask, 1])
+                if np.sum(mask):
+                    x_max, x_min = np.max(keypoint[mask, 0]), np.min(keypoint[mask, 0])
+                    y_max, y_min = np.max(keypoint[mask, 1]), np.min(keypoint[mask, 1])
+                else:
+                    x_max, x_min, y_max, y_min = 0, 0, 0, 0
             else:
                 x_max, x_min = np.max(keypoint[..., 0]), np.min(keypoint[..., 0])
                 y_max, y_min = np.max(keypoint[..., 1]), np.min(keypoint[..., 1])
@@ -87,9 +91,9 @@ class PreNormalize2D:
             keypoint[..., 0] = (keypoint[..., 0] - (w / 2)) / (w / 2)
             keypoint[..., 1] = (keypoint[..., 1] - (h / 2)) / (h / 2)
 
-        if mask is not None:
-            keypoint[..., 0][mask] = 0
-            keypoint[..., 1][mask] = 0
+        if maskout is not None:
+            keypoint[..., 0][maskout] = 0
+            keypoint[..., 1][maskout] = 0
         results['keypoint'] = keypoint
 
         return results
