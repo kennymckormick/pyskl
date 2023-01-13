@@ -160,16 +160,16 @@ def eval_ava(result_file,
     categories, class_whitelist = read_labelmap(open(label_file))
 
     # loading gt, do not need gt score
-    gt_bboxes, gt_labels, _ = read_csv(open(ann_file), class_whitelist)
+    gt_bboxes, gt_labels, _ = read_csv(ann_file, class_whitelist)
     print_time('Reading GT results', start)
 
     if exclude_file is not None:
-        excluded_keys = read_exclusions(open(exclude_file))
+        excluded_keys = read_exclusions(exclude_file)
     else:
         excluded_keys = list()
 
     start = time.time()
-    boxes, labels, scores = read_csv(open(result_file), class_whitelist)
+    boxes, labels, scores = read_csv(result_file, class_whitelist)
     print_time('Reading Detection results', start)
 
     start = time.time()
