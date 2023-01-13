@@ -153,9 +153,12 @@ class AVAPoseDataset(BaseDataset):
         for item in results:
             assert isinstance(item, tuple)
             score, names = item[0], item[1]
+            score = score.reshape(-1, score.shape[-1])
+            names = names.reshape(-1)
             assert score.shape[0] == names.shape[0] and len(names.shape) == 1
             for s, n in zip(score, names):
-                score_collect[n[:36]].append(s)
+                if n != 'NA':
+                    score_collect[n[:36]].append(s)
         score_collect = {k: np.stack(v).mean(axis=0) for k, v in score_collect.items()}
         return mdump(score_collect, out)
 
