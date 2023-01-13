@@ -8,6 +8,7 @@ import os
 import os.path as osp
 import socket
 import time
+import warnings
 from mmcv import load
 from mmcv.runner import get_dist_info
 from mmcv.utils import get_logger
