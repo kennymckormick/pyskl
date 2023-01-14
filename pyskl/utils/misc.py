@@ -12,6 +12,7 @@ import warnings
 from mmcv import load
 from mmcv.runner import get_dist_info
 from mmcv.utils import get_logger
+from tqdm import tqdm
 
 from ..smp import download_file
 
