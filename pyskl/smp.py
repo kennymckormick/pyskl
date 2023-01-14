@@ -200,7 +200,10 @@ def fnp(model, input=None):
     return params, None
 
 def cache_objects(mc_root, mc_cfg=('localhost', 22077), mc_size=60000, num_proc=32):
-    from .utils import mc_on, mp_cache, mp_cache_single, test_port
+    if __name__ == '__main__':
+        from pyskl.utils import mc_on, mp_cache, mp_cache_single, test_port
+    else:
+        from .utils import mc_on, mp_cache, mp_cache_single, test_port
     assert isinstance(mc_cfg, tuple) and mc_cfg[0] == 'localhost'
     if not test_port(mc_cfg[0], mc_cfg[1]):
         mc_on(port=mc_cfg[1], launcher='pytorch', size=mc_size)
