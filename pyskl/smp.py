@@ -64,6 +64,22 @@ def mdump(data, pth):
     assert suff in ['pkl', 'pickle']
     dpkl(data, pth)
 
+def load(pth):
+    try:
+        return mload(pth)
+    except:
+        warnings.warn('Can not load with `mload`, try `mmcv.load`. ')
+        import mmcv
+        return mmcv.load(pth)
+
+def dump(data, pth):
+    try:
+        return mdump(data, pth)
+    except:
+        warnings.warn('Can not dump with `mdump`, try `mmcv.dump`. ')
+        import mmcv
+        return mmcv.dump(data, pth)
+
 def default_set(self, args, name, default):
     if hasattr(args, name):
         val = getattr(args, name)
