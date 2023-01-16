@@ -79,11 +79,11 @@ class TransformerEncoderLayer(nn.Module):
 
     def forward(self, x, **kwargs):
         if self.ln_type == 'preln':
-            x = x + self._sa_block(self.norm1(x))
-            x = x + self._ff_block(self.norm2(x))
+            x = x + self._sa_block(self.attn_norm(x))
+            x = x + self._ff_block(self.ffn_norm(x))
         else:
-            x = self.norm1(x + self._sa_block(x))
-            x = self.norm2(x + self._ff_block(x))
+            x = self.attn_norm(x + self._sa_block(x))
+            x = self.ffn_norm(x + self._ff_block(x))
         return x
 
 
