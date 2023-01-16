@@ -9,23 +9,21 @@ from ..gcns.utils import unit_tcn
 
 class MHSA(nn.Module):
 
-    def __init__(self, dim, heads=8, dropout=0, bias=True, bias_kv=False, reduction=2):
+    def __init__(self, dim, heads=8, dropout=0, reduction=2):
         super().__init__()
         self.dim = dim
         self.heads = heads
         self.dim_head = dim // reduction
         self.inner_dim = self.dim_head * heads
         self.dropout = nn.Dropout(dropout)
-        self.bias = bias
-        self.bias_kv = bias_kv
 
         self.scale = self.dim_head ** -0.5
         self.attend = nn.Softmax(dim=-1)
 
-        self.q_proj = nn.Linear(dim, self.inner_dim, bias=bias)
-        self.k_proj = nn.Linear(dim, self.inner_dim, bias=bias_kv)
-        self.v_proj = nn.Linear(dim, self.inner_dim, bias=bias_kv)
-        self.to_out = nn.Linear(self.inner_dim, dim, bias=bias)
+        self.q_proj = nn.Linear(dim, self.inner_dim, bias=False)
+        self.k_proj = nn.Linear(dim, self.inner_dim, bias=False)
+        self.v_proj = nn.Linear(dim, self.inner_dim, bias=False)
+        self.to_out = nn.Linear(self.inner_dim, dim, bias=False)
 
     def forward(self, x):
         N, M, C = x.shape
@@ -53,36 +51,31 @@ class TransformerEncoderLayer(nn.Module):
                  activation='gelu',
                  ln_type='postln',
                  ln_eps=1e-5,
-                 bias=True,
-                 bias_kv=False,
                  **kwargs):
-        super(TransformerEncoderLayer, self).__init__()
-        self.self_attn = MHSA(dim, heads, dropout=dropout, bias=bias, bias_kv=bias_kv, reduction=reduction)
+        super().__init__()
+        self.self_attn = MHSA(dim, heads, dropout=dropout, reduction=reduction)
 
         dim_ffn = int(dim * mlp_ratio)
-        self.linear1 = nn.Linear(dim, dim_ffn)
+        self.fc1 = nn.Linear(dim, dim_ffn)
         self.dropout = nn.Dropout(dropout)
-        self.linear2 = nn.Linear(dim_ffn, dim)
+        self.fc2 = nn.Linear(dim_ffn, dim)
 
         assert ln_type in ['preln', 'postln']
         self.ln_type = ln_type
 
-        self.norm1 = nn.LayerNorm(dim, eps=ln_eps)
-        self.norm2 = nn.LayerNorm(dim, eps=ln_eps)
-
-        self.dropout1 = nn.Dropout(dropout)
-        self.dropout2 = nn.Dropout(dropout)
+        self.attn_norm = nn.LayerNorm(dim, eps=ln_eps)
+        self.ffn_norm = nn.LayerNorm(dim, eps=ln_eps)
 
         assert activation in ['relu', 'gelu']
         self.act = nn.ReLU() if activation == 'relu' else nn.GELU()
 
     def _sa_block(self, x):
         x = self.self_attn(x)[0]
-        return self.dropout1(x)
+        return self.dropout(x)
 
     def _ff_block(self, x):
-        x = self.linear2(self.dropout(self.act(self.linear1(x))))
-        return self.dropout2(x)
+        x = self.fc2(self.dropout(self.act(self.fc1(x))))
+        return self.dropout(x)
 
     def forward(self, x, **kwargs):
         if self.ln_type == 'preln':
