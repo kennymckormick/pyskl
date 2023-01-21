@@ -78,6 +78,7 @@ def train_model(model,
         videos_per_gpu=cfg.data.get('videos_per_gpu', 1),
         workers_per_gpu=cfg.data.get('workers_per_gpu', 1),
         persistent_workers=cfg.data.get('persistent_workers', False),
+        drop_last=cfg.data.get('drop_last', True),
         seed=cfg.seed)
     dataloader_setting = dict(dataloader_setting,
                               **cfg.data.get('train_dataloader', {}))
