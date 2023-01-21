@@ -240,7 +240,9 @@ def main():
     GCN_nperson = None
     if GCN_flag:
         format_op = [op for op in config.data.test.pipeline if op['type'] == 'FormatGCNInput'][0]
-        GCN_nperson = format_op['num_person']
+        # We will set the default value of GCN_nperson to 2, which is
+        # the default arg of FormatGCNInput
+        GCN_nperson = format_op.get('num_person', 2)
 
     model = init_recognizer(config, args.checkpoint, args.device)
 

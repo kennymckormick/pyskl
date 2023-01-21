@@ -3,11 +3,11 @@
 import hashlib
 import logging
 import multiprocessing as mp
-import warnings
 import numpy as np
 import os
 import os.path as osp
 import socket
+import warnings
 from mmcv import load
 from mmcv.runner import get_dist_info
 from mmcv.utils import get_logger

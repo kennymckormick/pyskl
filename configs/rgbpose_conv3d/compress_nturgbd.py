@@ -22,7 +22,7 @@ def compress(src, dest, shape=None, target_size=540, fps=-1):
     cmd = f'ffmpeg -y -loglevel error -i {src} -threads 1 {quality_str} {scale_str} {fps_str} {vcodec_str} {dest}'
     os.system(cmd)
 
-    
+
 def compress_nturgbd(name):
     src = name
     dest = src.replace('nturgbd_raw', 'nturgbd_videos').replace('_rgb.avi', '.mp4')
