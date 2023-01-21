@@ -7,7 +7,7 @@ from pyskl.smp import *
 
 def get_shape(vid):
     cmd = 'ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 \"{}\"'.format(vid)
-    w, h = subprocess.check_output(cmd1, shell=True).decode('utf-8').split('x')
+    w, h = subprocess.check_output(cmd, shell=True).decode('utf-8').split('x')
     return int(w), int(h)
 
 
@@ -21,6 +21,7 @@ def compress(src, dest, shape=None, target_size=540, fps=-1):
     vcodec_str = '-c:v libx264'
     cmd = f'ffmpeg -y -loglevel error -i {src} -threads 1 {quality_str} {scale_str} {fps_str} {vcodec_str} {dest}'
     os.system(cmd)
+
 
 def compress_nturgbd(name):
     src = name
