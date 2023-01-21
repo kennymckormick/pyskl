@@ -20,16 +20,12 @@ class MHSA(nn.Module):
         self.scale = self.dim_head ** -0.5
         self.attend = nn.Softmax(dim=-1)
 
-        self.q_proj = nn.Linear(dim, self.inner_dim, bias=False)
-        self.k_proj = nn.Linear(dim, self.inner_dim, bias=False)
-        self.v_proj = nn.Linear(dim, self.inner_dim, bias=False)
+        self.to_qkv = nn.Linear(dim, self.inner_dim * 3, bias=False)
         self.to_out = nn.Linear(self.inner_dim, dim, bias=False)
 
     def forward(self, x):
         N, M, C = x.shape
-        q = self.q_proj(x).reshape((N, M, self.heads, self.dim_head))
-        k = self.k_proj(x).reshape((N, M, self.heads, self.dim_head))
-        v = self.v_proj(x).reshape((N, M, self.heads, self.dim_head))
+        q, k, v = self.to_qkv(x).reshape((N, M, self.heads, 3 * self.dim_head)).chunk(3, dim=-1)
 
         dots = torch.einsum('nthc,nshc->nhts', q, k) * self.scale
         attn = self.attend(dots)
