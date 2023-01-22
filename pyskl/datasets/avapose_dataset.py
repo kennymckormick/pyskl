@@ -61,7 +61,7 @@ class AVAPoseDataset(BaseDataset):
         assert isinstance(self.box_thr, float)
         self.clip_length = clip_length
         self.squeeze = squeeze
-        self.reweight = None if reweight is None else mload(reweight)
+        self.reweight = reweight
 
         # Thresholding Training Examples
         for item in self.video_infos:
@@ -179,18 +179,17 @@ class AVAPoseDataset(BaseDataset):
             self.dump_results(results, file_name)
             results = mload(file_name)
 
-        score_collect = results
-
-        names = [k for k in score_collect]
-        results = [score_collect[k] for k in score_collect]
+        names = [k for k in results]
+        scores = [results[k] for k in results]
 
         assert len(results[0].shape) in [1, 2]
         if len(results[0].shape) == 1:
-            eval_results = ava_map(results, names, self.reweight)
+            eval_results = ava_map(scores, names, self.reweight)
         elif len(results[0].shape) == 2:
             raise NotImplementedError
 
         if file_name is not None:
             os.remove(file_name)
 
+        del names, scores, results
         return eval_results

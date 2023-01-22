@@ -2,6 +2,7 @@
 import numpy as np
 import os
 from datetime import datetime
+from mmcv import load
 from mmcv.runner import DistEvalHook as BasicDistEvalHook
 
 from .eval_ava import eval_ava
@@ -226,9 +227,13 @@ def binary_precision_recall_curve(y_score, y_true):
 def ava_map(scores, names, reweight=None, thre=0.0001, pose_only=True,
             label_file='data/ava/label_map.txt',
             ann_file='data/ava/val_v22.csv',
-            exclude_file='data/ava/val_exclude_v22.csv'):
+            exclude_file='data/ava/val_exclude_v22.csv',
+            write_tmp_file=False):
 
     lines = []
+    if reweight is not None:
+        reweight = load(reweight)
+
     for name, pred in zip(names, scores):
         if name == 'NA':
             continue
@@ -239,9 +244,13 @@ def ava_map(scores, names, reweight=None, thre=0.0001, pose_only=True,
                 p = p * reweight[name]
             if p >= thre:
                 lines.append(','.join(fd + [str(i), f'{p:.4f}']))
-    file_name = datetime.now().strftime('.%y%m%d_%H%M%S') + '.csv'
-    with open(file_name, 'w') as f:
-        f.write('\n'.join(lines))
-    ret = eval_ava(file_name, label_file, ann_file, exclude_file, ignore_empty_frames=pose_only)
-    os.remove(file_name)
+    if write_tmp_file:
+        file_name = datetime.now().strftime('.%y%m%d_%H%M%S') + '.csv'
+        with open(file_name, 'w') as f:
+            f.write('\n'.join(lines))
+        ret = eval_ava(file_name, label_file, ann_file, exclude_file, ignore_empty_frames=pose_only)
+        os.remove(file_name)
+    else:
+        ret = eval_ava(lines, label_file, ann_file, exclude_file, ignore_empty_frames=pose_only)
+    del lines
     return ret
