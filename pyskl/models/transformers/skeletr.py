@@ -66,7 +66,7 @@ class TransformerEncoderLayer(nn.Module):
         self.act = nn.ReLU() if activation == 'relu' else nn.GELU()
 
     def _sa_block(self, x):
-        x = self.self_attn(x)[0]
+        x = self.self_attn(x)
         return self.dropout(x)
 
     def _ff_block(self, x):
