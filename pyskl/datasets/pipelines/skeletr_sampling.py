@@ -10,6 +10,114 @@ EPS = 1e-4
 
 
 @PIPELINES.register_module()
+class NTUSSampling(UniformSampleFrames):
+
+    def __init__(self, num_clips=1, clip_olen=60, step=30, clip_len=30, seed=255, num_skeletons=20):
+        super().__init__(num_clips=num_clips, clip_len=clip_len, seed=seed)
+        self.num_skeletons = num_skeletons
+        assert num_skeletons >= 1 or num_skeletons == -1
+        self.clip_olen = clip_olen
+        self.step = step
+
+    def sample_seq_meta(self, num_person, total_frames, test_mode):
+        if total_frames <= self.clip_olen:
+            return [(i, 0, total_frames) for i in range(num_person)]
+        if test_mode:
+            offset = 0
+            np.random.seed(self.seed)
+        else:
+            offset = np.random.randint(0, min(self.step, total_frames - self.clip_olen))
+        windows = []
+        for start in range(offset, total_frames - self.step, self.step):
+            break_flag = False
+            end = start + self.clip_olen
+            if end >= total_frames:
+                start, end = total_frames - self.clip_olen, total_frames
+                break_flag = True
+            windows.extend([(i, start, end) for i in range(num_person)])
+            if break_flag:
+                break
+        return windows
+
+    @staticmethod
+    def get_stinfo(skeleton, img_shape, frame_idx, total_frames):
+        h, w = img_shape
+        t_embed = frame_idx / total_frames
+        score = np.mean(skeleton[:, -1])
+        min_x, max_x = min(skeleton[:, 0]), max(skeleton[:, 0])
+        min_y, max_y = min(skeleton[:, 1]), max(skeleton[:, 1])
+        c_x, c_y = (min_x + max_x) / 2, (min_y + max_y) / 2
+        l_x, l_y = (max_x - min_x) * .625, (max_y - min_y) * .625
+        stinfo = np.array([
+            (c_x - l_x) / w, (c_y - l_y) / h, (c_x + l_x) / w, (c_y + l_y) / h, t_embed, score
+        ], dtype=np.float32)
+        stinfo[stinfo < 0] = 0
+        stinfo[stinfo > 1] = 1
+        return stinfo
+
+    def __call__(self, results):
+        keypoint = results['keypoint']
+        M, T, V, C = keypoint.shape
+
+        assert T == results['total_frames']
+        test_mode = results.get('test_mode', False)
+        seq_meta = self.sample_seq_meta(M, T, test_mode)
+
+        kpt_ret, stinfos = [], []
+
+        for item in seq_meta:
+            i, start, end = item
+            kpt_sub = keypoint[i, start:end]
+            if results['test_mode']:
+                indices = self._get_test_clips(end - start, self.clip_len)
+            else:
+                indices = self._get_train_clips(end - start, self.clip_len)
+            # Aug, T, V, C
+            kpt_sub = kpt_sub[indices].reshape((self.num_clips, self.clip_len, *kpt_sub.shape[1:]))
+            kpt_ret.append(kpt_sub)
+            ct_frame = (end + start) // 2
+            if 'img_shape' in results:
+                stinfos.append(self.get_stinfo(keypoint[i, ct_frame], results['img_shape'], ct_frame, T))
+            else:
+                # Not applicable, use a fake stinfo
+                stinfos.append(np.array([0, 0, 1, 1, 0.5, 1], dtype=np.float32))
+
+        # Aug, M, T, V, C
+        kpt_ret = np.stack(kpt_ret, axis=1)
+        # M, 6
+        stinfo = np.stack(stinfos)
+
+        num_skeletons, all_skeletons = self.num_skeletons, kpt_ret.shape[1]
+        if num_skeletons == -1:
+            num_skeletons = all_skeletons
+
+        if all_skeletons > num_skeletons:
+            stinfo = np.tile(stinfo[None], (self.num_clips, 1, 1))
+            if results['test_mode']:
+                indices = self._get_test_clips(all_skeletons, num_skeletons)
+            else:
+                indices = self._get_train_clips(all_skeletons, num_skeletons)
+            indices = indices.reshape((self.num_clips, num_skeletons))
+            for i in range(self.num_clips):
+                kpt_ret[i, :num_skeletons] = kpt_ret[i, indices[i]]
+                stinfo[i, :num_skeletons] = stinfo[i, indices[i]]
+            kpt_ret = kpt_ret[:, :num_skeletons]
+            stinfo = stinfo[:, :num_skeletons]
+        else:
+            kpt_ret_new = np.zeros((self.num_clips, num_skeletons, *kpt_ret.shape[2:]), dtype=np.float32)
+            stinfo_new = np.zeros((self.num_clips, num_skeletons, 6), dtype=np.float32)
+            kpt_ret_new[:, :all_skeletons] = kpt_ret
+            stinfo_new[:, :all_skeletons] = stinfo
+            kpt_ret = kpt_ret_new
+            stinfo = stinfo_new
+
+        results['keypoint'] = kpt_ret
+        results['stinfo'] = stinfo
+        results['name'] = results['frame_dir']
+        return results
+
+
+@PIPELINES.register_module()
 class KineticsSSampling(UniformSampleFrames):
 
     def __init__(self,
