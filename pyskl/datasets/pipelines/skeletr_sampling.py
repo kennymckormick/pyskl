@@ -73,6 +73,7 @@ class NTUSSampling(UniformSampleFrames):
             else:
                 indices = self._get_train_clips(end - start, self.clip_len)
             # Aug, T, V, C
+            indices = np.mod(indices, end - start)
             kpt_sub = kpt_sub[indices].reshape((self.num_clips, self.clip_len, *kpt_sub.shape[1:]))
             kpt_ret.append(kpt_sub)
             ct_frame = (end + start) // 2
