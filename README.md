@@ -25,7 +25,7 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
 
 - [x] DG-STGCN (Arxiv): https://arxiv.org/abs/2210.05895 [[MODELZOO](/configs/dgstgcn/README.md)]
 - [x] ST-GCN (AAAI 2018): https://arxiv.org/abs/1801.07455 [[MODELZOO](/configs/stgcn/README.md)]
-- [x] ST-GCN++ (PYSKL, Tech Report): https://arxiv.org/abs/2205.09443 [[MODELZOO](/configs/stgcn++/README.md)]
+- [x] ST-GCN++ (ACMMM 2022): https://arxiv.org/abs/2205.09443 [[MODELZOO](/configs/stgcn++/README.md)]
 - [x] PoseConv3D (CVPR 2022 Oral): https://arxiv.org/abs/2104.13586 [[MODELZOO](/configs/posec3d/README.md)]
 - [x] AAGCN (TIP): https://arxiv.org/abs/1912.06971 [[MODELZOO](/configs/aagcn/README.md)]
 - [x] MS-G3D (CVPR 2020 Oral): https://arxiv.org/abs/2003.14111 [[MODELZOO](/configs/msg3d/README.md)]
@@ -91,12 +91,12 @@ For specific examples, please go to the README for each specific algorithm we su
 If you use PYSKL in your research or wish to refer to the baseline results published in the Model Zoo, please use the following BibTeX entry and the BibTex entry corresponding to the specific algorithm you used.
 
 ```BibTeX
-@misc{duan2022PYSKL,
-  url = {https://arxiv.org/abs/2205.09443},
-  author = {Duan, Haodong and Wang, Jiaqi and Chen, Kai and Lin, Dahua},
-  title = {PYSKL: Towards Good Practices for Skeleton Action Recognition},
-  publisher = {arXiv},
-  year = {2022}
+@inproceedings{duan2022pyskl,
+  title={Pyskl: Towards good practices for skeleton action recognition},
+  author={Duan, Haodong and Wang, Jiaqi and Chen, Kai and Lin, Dahua},
+  booktitle={Proceedings of the 30th ACM International Conference on Multimedia},
+  pages={7351--7354},
+  year={2022}
 }
 ```
 
