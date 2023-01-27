@@ -7,12 +7,12 @@ STGCN++ is a variant of STGCN we developed in PYSKL with some modifications in t
 ## Citation
 
 ```BibTeX
-@misc{duan2022PYSKL,
-  url = {https://arxiv.org/abs/2205.09443},
-  author = {Duan, Haodong and Wang, Jiaqi and Chen, Kai and Lin, Dahua},
-  title = {PYSKL: Towards Good Practices for Skeleton Action Recognition},
-  publisher = {arXiv},
-  year = {2022}
+@inproceedings{duan2022pyskl,
+  title={Pyskl: Towards good practices for skeleton action recognition},
+  author={Duan, Haodong and Wang, Jiaqi and Chen, Kai and Lin, Dahua},
+  booktitle={Proceedings of the 30th ACM International Conference on Multimedia},
+  pages={7351--7354},
+  year={2022}
 }
 ```
 
