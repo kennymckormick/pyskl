@@ -53,13 +53,46 @@ class PoseDecode:
 class PreNormalize2D:
     """Normalize the range of keypoint values. """
 
-    def __init__(self, img_shape=(1080, 1920)):
+    def __init__(self, img_shape=(1080, 1920), threshold=0.01, mode='fix'):
+        self.threshold = threshold
+        # Will skip points with score less than threshold
         self.img_shape = img_shape
+        self.mode = mode
+        assert mode in ['fix', 'auto']
 
     def __call__(self, results):
-        h, w = results.get('img_shape', self.img_shape)
-        results['keypoint'][..., 0] = (results['keypoint'][..., 0] - (w / 2)) / (w / 2)
-        results['keypoint'][..., 1] = (results['keypoint'][..., 1] - (h / 2)) / (h / 2)
+        mask, maskout, keypoint = None, None, results['keypoint'].astype(np.float32)
+        if 'keypoint_score' in results:
+            keypoint_score = results.pop('keypoint_score').astype(np.float32)
+            keypoint = np.concatenate([keypoint, keypoint_score[..., None]], axis=-1)
+
+        if keypoint.shape[-1] == 3:
+            mask = keypoint[..., 2] > self.threshold
+            maskout = keypoint[..., 2] <= self.threshold
+
+        if self.mode == 'auto':
+            if mask is not None:
+                if np.sum(mask):
+                    x_max, x_min = np.max(keypoint[mask, 0]), np.min(keypoint[mask, 0])
+                    y_max, y_min = np.max(keypoint[mask, 1]), np.min(keypoint[mask, 1])
+                else:
+                    x_max, x_min, y_max, y_min = 0, 0, 0, 0
+            else:
+                x_max, x_min = np.max(keypoint[..., 0]), np.min(keypoint[..., 0])
+                y_max, y_min = np.max(keypoint[..., 1]), np.min(keypoint[..., 1])
+            if (x_max - x_min) > 10 and (y_max - y_min) > 10:
+                keypoint[..., 0] = (keypoint[..., 0] - (x_max + x_min) / 2) / (x_max - x_min) * 2
+                keypoint[..., 1] = (keypoint[..., 1] - (y_max + y_min) / 2) / (y_max - y_min) * 2
+        else:
+            h, w = results.get('img_shape', self.img_shape)
+            keypoint[..., 0] = (keypoint[..., 0] - (w / 2)) / (w / 2)
+            keypoint[..., 1] = (keypoint[..., 1] - (h / 2)) / (h / 2)
+
+        if maskout is not None:
+            keypoint[..., 0][maskout] = 0
+            keypoint[..., 1][maskout] = 0
+        results['keypoint'] = keypoint
+
         return results
 
 
@@ -259,25 +292,28 @@ class PreNormalize3D:
         return results
 
 
-@PIPELINES.register_module()
 class JointToBone:
 
     def __init__(self, dataset='nturgb+d', target='keypoint'):
         self.dataset = dataset
         self.target = target
-        if self.dataset not in ['nturgb+d', 'openpose', 'coco']:
+        if self.dataset not in ['nturgb+d', 'openpose', 'coco', 'handmp']:
             raise ValueError(
                 f'The dataset type {self.dataset} is not supported')
         if self.dataset == 'nturgb+d':
-            self.pairs = [(0, 1), (1, 20), (2, 20), (3, 2), (4, 20), (5, 4), (6, 5), (7, 6), (8, 20), (9, 8),
+            self.pairs = ((0, 1), (1, 20), (2, 20), (3, 2), (4, 20), (5, 4), (6, 5), (7, 6), (8, 20), (9, 8),
                           (10, 9), (11, 10), (12, 0), (13, 12), (14, 13), (15, 14), (16, 0), (17, 16), (18, 17),
-                          (19, 18), (21, 22), (20, 20), (22, 7), (23, 24), (24, 11)]
+                          (19, 18), (21, 22), (20, 20), (22, 7), (23, 24), (24, 11))
         elif self.dataset == 'openpose':
             self.pairs = ((0, 0), (1, 0), (2, 1), (3, 2), (4, 3), (5, 1), (6, 5), (7, 6), (8, 2), (9, 8), (10, 9),
                           (11, 5), (12, 11), (13, 12), (14, 0), (15, 0), (16, 14), (17, 15))
         elif self.dataset == 'coco':
             self.pairs = ((0, 0), (1, 0), (2, 0), (3, 1), (4, 2), (5, 0), (6, 0), (7, 5), (8, 6), (9, 7), (10, 8),
                           (11, 0), (12, 0), (13, 11), (14, 12), (15, 13), (16, 14))
+        elif self.dataset == 'handmp':
+            self.pairs = ((0, 0), (1, 0), (2, 1), (3, 2), (4, 3), (5, 0), (6, 5), (7, 6), (8, 7), (9, 0), (10, 9),
+                          (11, 10), (12, 11), (13, 0), (14, 13), (15, 14), (16, 15), (17, 0), (18, 17), (19, 18),
+                          (20, 19))
 
     def __call__(self, results):
 
@@ -288,7 +324,7 @@ class JointToBone:
         assert C in [2, 3]
         for v1, v2 in self.pairs:
             bone[..., v1, :] = keypoint[..., v1, :] - keypoint[..., v2, :]
-            if C == 3 and self.dataset in ['openpose', 'coco']:
+            if C == 3 and self.dataset in ['openpose', 'coco', 'handmp']:
                 score = (keypoint[..., v1, 2] + keypoint[..., v2, 2]) / 2
                 bone[..., v1, 2] = score
 

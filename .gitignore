@@ -108,9 +108,6 @@ benchlist.txt
 work_dirs/
 .cache/
 
-# Pytorch
-*.pth
-
 # Profile
 *.prof
 
