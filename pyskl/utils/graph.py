@@ -83,7 +83,7 @@ class Graph:
         self.nx_node = nx_node
 
         assert nx_node == 1 or mode == 'random', "nx_node can be > 1 only if mode is 'random'"
-        assert layout in ['openpose', 'nturgb+d', 'coco']
+        assert layout in ['openpose', 'nturgb+d', 'coco', 'handmp']
 
         self.get_layout(layout)
         self.hop_dis = get_hop_distance(self.num_node, self.inward, max_hop)
@@ -119,6 +119,14 @@ class Graph:
                 (15, 13), (13, 11), (16, 14), (14, 12), (11, 5), (12, 6),
                 (9, 7), (7, 5), (10, 8), (8, 6), (5, 0), (6, 0),
                 (1, 0), (3, 1), (2, 0), (4, 2)
+            ]
+            self.center = 0
+        elif layout == 'handmp':
+            self.num_node = 21
+            self.inward = [
+                (1, 0), (2, 1), (3, 2), (4, 3), (5, 0), (6, 5), (7, 6), (8, 7),
+                (9, 0), (10, 9), (11, 10), (12, 11), (13, 0), (14, 13),
+                (15, 14), (16, 15), (17, 0), (18, 17), (19, 18), (20, 19)
             ]
             self.center = 0
         else:
