@@ -55,6 +55,10 @@ def parse_args():
         choices=['pytorch', 'slurm'],
         default='pytorch',
         help='job launcher')
+    parser.add_argument(
+        '--compile',
+        action='store_true',
+        help='whether to compile the model before training / testing (only available in pytorch 2.0)')
     parser.add_argument('--local_rank', type=int, default=0)
     parser.add_argument('--local-rank', type=int, default=0)
     args = parser.parse_args()
@@ -80,7 +84,7 @@ def inference_pytorch(args, cfg, data_loader):
 
     # build the model and load checkpoint
     model = build_model(cfg.model)
-    if dv(torch.__version__) >= dv('2.0.0'):
+    if dv(torch.__version__) >= dv('2.0.0') and args.compile:
         model = torch.compile(model)
 
     if args.checkpoint is None:
