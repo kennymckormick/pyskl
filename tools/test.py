@@ -7,7 +7,9 @@ import os.path as osp
 import time
 import torch
 import torch.distributed as dist
-from mmcv import Config, load
+from mmcv import Config
+from mmcv import digit_version as dv
+from mmcv import load
 from mmcv.cnn import fuse_conv_bn
 from mmcv.engine import multi_gpu_test
 from mmcv.fileio.io import file_handlers
@@ -77,6 +79,8 @@ def inference_pytorch(args, cfg, data_loader):
 
     # build the model and load checkpoint
     model = build_model(cfg.model)
+    if dv(torch.__version__) >= dv('2.0.0'):
+        model = torch.compile(model)
 
     if args.checkpoint is None:
         work_dir = cfg.work_dir

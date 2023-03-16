@@ -8,6 +8,7 @@ import time
 import torch
 import torch.distributed as dist
 from mmcv import Config
+from mmcv import digit_version as dv
 from mmcv.runner import get_dist_info, init_dist, set_random_seed
 from mmcv.utils import get_git_hash
 
@@ -113,6 +114,8 @@ def main():
     meta['work_dir'] = osp.basename(cfg.work_dir.rstrip('/\\'))
 
     model = build_model(cfg.model)
+    if dv(torch.__version__) >= dv('2.0.0'):
+        model = torch.compile(model)
 
     datasets = [build_dataset(cfg.data.train)]
 
