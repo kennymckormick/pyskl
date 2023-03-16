@@ -7,7 +7,9 @@ import os.path as osp
 import time
 import torch
 import torch.distributed as dist
-from mmcv import Config, load
+from mmcv import Config
+from mmcv import digit_version as dv
+from mmcv import load
 from mmcv.cnn import fuse_conv_bn
 from mmcv.engine import multi_gpu_test
 from mmcv.fileio.io import file_handlers
@@ -53,6 +55,10 @@ def parse_args():
         choices=['pytorch', 'slurm'],
         default='pytorch',
         help='job launcher')
+    parser.add_argument(
+        '--compile',
+        action='store_true',
+        help='whether to compile the model before training / testing (only available in pytorch 2.0)')
     parser.add_argument('--local_rank', type=int, default=-1)
     parser.add_argument('--local-rank', type=int, default=-1)
     args = parser.parse_args()
@@ -78,6 +84,8 @@ def inference_pytorch(args, cfg, data_loader):
 
     # build the model and load checkpoint
     model = build_model(cfg.model)
+    if dv(torch.__version__) >= dv('2.0.0') and args.compile:
+        model = torch.compile(model)
 
     if args.checkpoint is None:
         work_dir = cfg.work_dir
