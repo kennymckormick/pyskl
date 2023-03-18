@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
+import copy as cp
 import decord
 import mmcv
 import numpy as np
@@ -56,19 +57,36 @@ def detection_inference(model, frames):
     return results
 
 
-def pose_inference(model, frames, det_results):
+def pose_inference(anno_in, model, frames, det_results, compress=False):
+    anno = cp.deepcopy(anno_in)
     assert len(frames) == len(det_results)
     total_frames = len(frames)
     num_person = max([len(x) for x in det_results])
-    kp = np.zeros((num_person, total_frames, 17, 3), dtype=np.float32)
+    anno['total_frames'] = total_frames
+    anno['num_person_raw'] = num_person
 
-    for i, (f, d) in enumerate(zip(frames, det_results)):
-        # Align input format
-        d = [dict(bbox=x) for x in list(d)]
-        pose = inference_top_down_pose_model(model, f, d, format='xyxy')[0]
-        for j, item in enumerate(pose):
-            kp[j, i] = item['keypoints']
-    return kp
+    if compress:
+        kp, frame_inds = [], []
+        for i, (f, d) in enumerate(zip(frames, det_results)):
+            # Align input format
+            d = [dict(bbox=x) for x in list(d)]
+            pose = inference_top_down_pose_model(model, f, d, format='xyxy')[0]
+            for j, item in enumerate(pose):
+                kp.append(item['keypoints'])
+                frame_inds.append(i)
+        anno['keypoint'] = np.stack(kp).astype(np.float16)
+        anno['frame_inds'] = np.array(frame_inds, dtype=np.int16)
+    else:
+        kp = np.zeros((num_person, total_frames, 17, 3), dtype=np.float32)
+        for i, (f, d) in enumerate(zip(frames, det_results)):
+            # Align input format
+            d = [dict(bbox=x) for x in list(d)]
+            pose = inference_top_down_pose_model(model, f, d, format='xyxy')[0]
+            for j, item in enumerate(pose):
+                kp[j, i] = item['keypoints']
+        anno['keypoint'] = kp[..., :2].astype(np.float16)
+        anno['keypoint_score'] = kp[..., 2].astype(np.float16)
+    return anno
 
 
 def parse_args():
@@ -95,6 +113,9 @@ def parse_args():
     parser.add_argument('--out', type=str, help='output pickle name')
     parser.add_argument('--tmpdir', type=str, default='tmp')
     parser.add_argument('--local_rank', type=int, default=0)
+    # * When non-dist is set, will only use 1 GPU
+    parser.add_argument('--non-dist', action='store_true', help='whether to use distributed skeleton extraction')
+    parser.add_argument('--compress', action='store_true', help='whether to do K400-style compression')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -116,13 +137,16 @@ def main():
     else:
         annos = [dict(frame_dir=osp.basename(x[0]).split('.')[0], filename=x[0], label=int(x[1])) for x in lines]
 
-    init_dist('pytorch', backend='nccl')
-    rank, world_size = get_dist_info()
-
-    if rank == 0:
+    if args.non_dist:
+        my_part = annos
         os.makedirs(args.tmpdir, exist_ok=True)
-    dist.barrier()
-    my_part = annos[rank::world_size]
+    else:
+        init_dist('pytorch', backend='nccl')
+        rank, world_size = get_dist_info()
+        if rank == 0:
+            os.makedirs(args.tmpdir, exist_ok=True)
+        dist.barrier()
+        my_part = annos[rank::world_size]
 
     det_model = init_detector(args.det_config, args.det_ckpt, 'cuda')
     assert det_model.CLASSES[0] == 'person', 'A detector trained on COCO is required'
@@ -142,30 +166,29 @@ def main():
             res = res[box_areas >= args.det_area_thr]
             det_results[i] = res
 
-        pose_results = pose_inference(pose_model, frames, det_results)
         shape = frames[0].shape[:2]
-        anno['img_shape'] = anno['original_shape'] = shape
-        anno['total_frames'] = len(frames)
-        anno['num_person_raw'] = pose_results.shape[0]
-        anno['keypoint'] = pose_results[..., :2].astype(np.float16)
-        anno['keypoint_score'] = pose_results[..., 2].astype(np.float16)
+        anno['img_shape'] = shape
+        anno = pose_inference(anno, pose_model, frames, det_results, compress=args.compress)
         anno.pop('filename')
 
-    mmcv.dump(my_part, osp.join(args.tmpdir, f'part_{rank}.pkl'))
-    dist.barrier()
+    if args.non_dist:
+        mmcv.dump(my_part, args.out)
+    else:
+        mmcv.dump(my_part, osp.join(args.tmpdir, f'part_{rank}.pkl'))
+        dist.barrier()
 
-    if rank == 0:
-        parts = [mmcv.load(osp.join(args.tmpdir, f'part_{i}.pkl')) for i in range(world_size)]
-        rem = len(annos) % world_size
-        if rem:
-            for i in range(rem, world_size):
-                parts[i].append(None)
+        if rank == 0:
+            parts = [mmcv.load(osp.join(args.tmpdir, f'part_{i}.pkl')) for i in range(world_size)]
+            rem = len(annos) % world_size
+            if rem:
+                for i in range(rem, world_size):
+                    parts[i].append(None)
 
-        ordered_results = []
-        for res in zip(*parts):
-            ordered_results.extend(list(res))
-        ordered_results = ordered_results[:len(annos)]
-        mmcv.dump(ordered_results, args.out)
+            ordered_results = []
+            for res in zip(*parts):
+                ordered_results.extend(list(res))
+            ordered_results = ordered_results[:len(annos)]
+            mmcv.dump(ordered_results, args.out)
 
 
 if __name__ == '__main__':
