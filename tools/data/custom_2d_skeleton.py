@@ -152,6 +152,7 @@ def main():
     assert det_model.CLASSES[0] == 'person', 'A detector trained on COCO is required'
     pose_model = init_pose_model(args.pose_config, args.pose_ckpt, 'cuda')
 
+    results = []
     for anno in tqdm(my_part):
         frames = extract_frame(anno['filename'])
         det_results = detection_inference(det_model, frames)
@@ -170,11 +171,12 @@ def main():
         anno['img_shape'] = shape
         anno = pose_inference(anno, pose_model, frames, det_results, compress=args.compress)
         anno.pop('filename')
+        results.append(anno)
 
     if args.non_dist:
-        mmcv.dump(my_part, args.out)
+        mmcv.dump(results, args.out)
     else:
-        mmcv.dump(my_part, osp.join(args.tmpdir, f'part_{rank}.pkl'))
+        mmcv.dump(results, osp.join(args.tmpdir, f'part_{rank}.pkl'))
         dist.barrier()
 
         if rank == 0:
