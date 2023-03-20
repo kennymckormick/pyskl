@@ -46,7 +46,7 @@ class PoseDataset(BaseDataset):
                  pipeline,
                  split=None,
                  valid_ratio=None,
-                 box_thr=0.5,
+                 box_thr=None,
                  class_prob=None,
                  memcached=False,
                  mc_cfg=('localhost', 22077),
@@ -65,13 +65,13 @@ class PoseDataset(BaseDataset):
 
         # Thresholding Training Examples
         self.valid_ratio = valid_ratio
-        if self.valid_ratio is not None:
-            assert isinstance(self.valid_ratio, float)
+        if self.valid_ratio is not None and isinstance(self.valid_ratio, float) and self.valid_ratio > 0:
             self.video_infos = [
                 x for x in self.video_infos
                 if x['valid'][self.box_thr] / x['total_frames'] >= valid_ratio
             ]
             for item in self.video_infos:
+                assert 'box_score' in item, 'if valid_ratio is a positive number, item should have field `box_score`'
                 anno_inds = (item['box_score'] >= self.box_thr)
                 item['anno_inds'] = anno_inds
         for item in self.video_infos:

@@ -16,13 +16,13 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
 </figure>
 </div>
 
-## News
+## Change Log
 
+- Improve skeleton extraction script ([PR](https://github.com/kennymckormick/pyskl/pull/150)). Now it supports non-distributed skeleton extraction and k400-style (**2023-03-20**).
 - Support PyTorch 2.0: when set `--compile` for training/testing scripts and with `torch.__version__ >= 'v2.0.0'` detected, will use `torch.compile` to compile the model before training/testing. Experimental Feature, absolutely no performance warranty (**2023-03-16**).
 - Provide a real-time gesture recognition demo based on skeleton-based action recognition with ST-GCN++, check [Demo](/demo/demo.md) for more details and instructions (**2023-02-10**).
 - Provide [scripts](/examples/inference_speed.ipynb) to estimate the inference speed of each model (**2022-12-30**).
 - Support [RGBPoseConv3D](https://arxiv.org/abs/2104.13586), a two-stream 3D-CNN for action recognition based on RGB & Human Skeleton. Follow the [guide](/configs/rgbpose_conv3d/README.md) to train and test RGBPoseConv3D on NTURGB+D （**2022-12-29**).
-- We provide a script ([ntu_preproc.py](/tools/data/ntu_preproc.py)) to generate PYSKL-style annotations files from official NTURGB+D skeleton files (**2022-12-20**).
 
 ## Supported Algorithms
 
