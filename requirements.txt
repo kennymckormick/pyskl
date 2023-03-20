@@ -1,4 +1,5 @@
 decord>=0.6.0
+fvcore
 matplotlib
 mmcv-full==1.5.0
 mmdet
@@ -11,4 +12,3 @@ pymemcache
 scipy
 torch>=1.5
 tqdm
-fvcore
