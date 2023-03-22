@@ -85,6 +85,7 @@ dependencies:
     - https://download.openmmlab.com/mmcv/dist/cu102/torch1.9.0/mmcv_full-1.5.0-cp37-cp37m-manylinux1_x86_64.whl
     - mmdet==2.23.0
     - mmpose==0.24.0
+    - moviepy==1.0.3
     - msgpack==0.6.2
     - msgpack-numpy==0.4.7.1
     - munkres==1.1.4

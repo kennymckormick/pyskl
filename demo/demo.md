@@ -9,6 +9,7 @@ We currently provide an offline GPU-demo for skeleton action recognition and an 
 # Following commands assume you are in the root directory of pyskl (indicated as `$PYSKL`)
 conda env create -f pyskl.yaml  # Create the conda environment (named `pyskl`) for this project, run it if you haven't created one yet.
 conda activate pyskl  # Activate the `pyskl` environment
+pip install -e .  # Install this project
 ```
 - Before running the gesture recognition demo, you need to install `mediapipe` first. This can be completed simply by `pip install mediapipe`.
 
