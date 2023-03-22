@@ -1,20 +1,17 @@
 # Demo
 
-We currently provide
+We currently provide an offline GPU-demo for skeleton action recognition and an online CPU-demo for gesture recognition. Details are provided below.
 
 ## Preparation
 
-- Before running the skeleton action recognition demo, make sure you have installed `mmcv-full`, `mmpose` and `mmdet`. You should first install `mmcv-full`, and then install `mmpose`, `mmdet`. You can use the following installation commands:
+- Before running the skeleton action recognition demo, make sure you have installed `mmcv-full`, `mmpose` and `mmdet`. We recommend you to directly use the provided conda environment, with all necessary dependencies included:
 ```bash
-pip install openmim
-mim install mmcv-full
-mim install mmdetection
-mim install mmpose
-# Then you can switch to `$PYSKL` directory and install PYSKL from source.
-pip install -e .
+# Following commands assume you are in the root directory of pyskl (indicated as `$PYSKL`)
+conda env create -f pyskl.yaml  # Create the conda environment (named `pyskl`) for this project, run it if you haven't created one yet.
+conda activate pyskl  # Activate the `pyskl` environment
+pip install -e .  # Install this project
 ```
 - Before running the gesture recognition demo, you need to install `mediapipe` first. This can be completed simply by `pip install mediapipe`.
-- You should run the provided scripts under the directory `$PYSKL`.
 
 ## Skeleton Action Recognition Demo (GPU, offline)
 
