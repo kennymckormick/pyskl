@@ -47,9 +47,8 @@ This repo is the official implementation of [PoseConv3D](https://arxiv.org/abs/2
 ```shell
 git clone https://github.com/kennymckormick/pyskl.git
 cd pyskl
-# Please first install pytorch according to instructions on the official website: https://pytorch.org/get-started/locally/. Please use pytorch with version smaller than 1.11.0 and larger (or equal) than 1.5.0
-# The following command will install mmcv-full 1.5.0 from source, which might be very slow (take ~10 minutes). You can also follow the instruction at https://github.com/open-mmlab/mmcv to install mmcv-full from pre-built wheels, which will be much faster.
-pip install -r requirements.txt
+conda env create -f pyskl.yaml
+conda activate pyskl
 pip install -e .
 ```
 
