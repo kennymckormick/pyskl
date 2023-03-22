@@ -104,7 +104,6 @@ data_cfg = dict(
 
 test_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='TopDownGetBboxCenterScale', padding=1.25),
     dict(type='TopDownAffine'),
     dict(type='ToTensor'),
     dict(

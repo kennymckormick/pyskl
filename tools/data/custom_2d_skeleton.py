@@ -29,19 +29,11 @@ except (ImportError, ModuleNotFoundError):
                       '`init_pose_model` form `mmpose.apis`. These apis are '
                       'required in this script! ')
 
-# default_mmdet_root = osp.dirname(mmdet.__path__[0])
-# default_mmpose_root = osp.dirname(mmpose.__path__[0])
-# default_det_config = (
-#     f'{default_mmdet_root}/configs/faster_rcnn/'
-#     'faster_rcnn_r50_caffe_fpn_mstrain_1x_coco-person.py')
 pyskl_root = osp.dirname(pyskl.__path__[0])
-default_det_config = f'{pyskl_root}/demo/faster_rcnn_r50_fpn_2x_coco.py'
+default_det_config = f'{pyskl_root}/demo/faster_rcnn_r50_fpn_1x_coco-person.py'
 default_det_ckpt = (
     'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco-person/'
     'faster_rcnn_r50_fpn_1x_coco-person_20201216_175929-d022e227.pth')
-# default_pose_config = (
-#     f'{default_mmpose_root}/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/'
-#     'coco/hrnet_w32_coco_256x192.py')
 default_pose_config = f'{pyskl_root}/demo/hrnet_w32_coco_256x192.py'
 default_pose_ckpt = (
     'https://download.openmmlab.com/mmpose/top_down/hrnet/'
