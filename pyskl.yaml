@@ -7,17 +7,19 @@ dependencies:
   - _libgcc_mutex=0.1=main
   - _openmp_mutex=4.5=1_gnu
   - blas=1.0=mkl
+  - brotlipy=0.7.0=py37h27cfd23_1003
   - bzip2=1.0.8=h7b6447c_0
   - ca-certificates=2023.01.10=h06a4308_0
   - certifi=2022.12.7=py37h06a4308_0
   - cffi=1.14.6=py37hc58025e_0
   - cryptography=35.0.0=py37h5d9358c_0
-  - cudatoolkit=10.2.89=hfd86e86_1
+  - cudatoolkit=11.3.1=h2bc3f7f_2
   - ffmpeg=4.3=hf484d3e_0
   - freetype=2.11.0=h70c0345_0
   - giflib=5.2.1=h7b6447c_0
   - gmp=6.2.1=h295c915_3
   - gnutls=3.6.15=he1e5248_0
+  - idna=3.4=py37h06a4308_0
   - intel-openmp=2021.4.0=h06a4308_3561
   - jpeg=9b=h024ee3a_2
   - lame=3.100=h7b6447c_0
@@ -51,16 +53,18 @@ dependencies:
   - pip=23.0.1=pyhd8ed1ab_0
   - pycparser=2.21=pyhd8ed1ab_0
   - pyopenssl=20.0.1=pyhd3eb1b0_1
+  - pysocks=1.7.1=py37_1
   - python=3.7.11=h12debd9_0
   - python_abi=3.7=2_cp37m
-  - pytorch=1.9.0=py3.7_cuda10.2_cudnn7.6.5_0
+  - pytorch=1.11.0=py3.7_cuda11.3_cudnn8.2.0_0
+  - pytorch-mutex=1.0=cuda
   - readline=8.1=h27cfd23_0
   - setuptools=67.6.0=pyhd8ed1ab_0
   - six=1.16.0=pyh6c4a22f_0
   - sqlite=3.36.0=hc218d9a_0
   - tk=8.6.10=hbc83047_0
-  - torchaudio=0.9.0=py37
-  - torchvision=0.10.0=py37_cu102
+  - torchaudio=0.11.0=py37_cu113
+  - torchvision=0.12.0=py37_cu113
   - typing_extensions=4.3.0=py37h06a4308_0
   - wheel=0.40.0=pyhd8ed1ab_0
   - xz=5.2.5=h7b6447c_0
@@ -70,19 +74,26 @@ dependencies:
   - zstd=1.4.9=haebb681_0
   - pip:
     - addict==2.4.0
+    - backcall==0.2.0
+    - chardet==5.1.0
     - charset-normalizer==3.1.0
     - chumpy==0.70
     - cycler==0.11.0
     - cython==0.29.26
+    - decorator==4.4.2
     - decord==0.6.0
     - fonttools==4.38.0
     - fvcore==0.1.5.post20221221
-    - idna==3.4
+    - imageio==2.27.0
+    - imageio-ffmpeg==0.4.8
     - iopath==0.1.10
+    - ipython==7.34.0
+    - jedi==0.18.2
     - json-tricks==3.16.1
     - kiwisolver==1.4.4
     - matplotlib==3.5.3
-    - https://download.openmmlab.com/mmcv/dist/cu102/torch1.9.0/mmcv_full-1.5.0-cp37-cp37m-manylinux1_x86_64.whl
+    - matplotlib-inline==0.1.6
+    - https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/mmcv_full-1.5.0-cp37-cp37m-manylinux1_x86_64.whl
     - mmdet==2.23.0
     - mmpose==0.24.0
     - moviepy==1.0.3
@@ -92,9 +103,16 @@ dependencies:
     - numpy==1.20.3
     - opencv-python==4.7.0.72
     - packaging==23.0
+    - parso==0.8.3
+    - pexpect==4.8.0
+    - pickleshare==0.7.5
     - pillow==9.4.0
     - portalocker==2.7.0
+    - proglog==0.1.10
+    - prompt-toolkit==3.0.38
+    - ptyprocess==0.7.0
     - pycocotools==2.0.6
+    - pygments==2.14.0
     - pyparsing==3.0.9
     - python-dateutil==2.8.2
     - pyyaml==6.0
@@ -104,8 +122,10 @@ dependencies:
     - termcolor==2.2.0
     - terminaltables==3.1.10
     - tqdm==4.65.0
+    - traitlets==5.9.0
     - typing-extensions==4.5.0
     - urllib3==1.26.15
+    - wcwidth==0.2.6
     - xtcocotools==1.13
     - yacs==0.1.8
     - yapf==0.32.0
