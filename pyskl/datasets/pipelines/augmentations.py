@@ -293,9 +293,9 @@ class RandomResizedCrop(RandomCrop):
                 np.log(min_ar), np.log(max_ar), size=max_attempts))
         target_areas = np.random.uniform(*area_range, size=max_attempts) * area
         candidate_crop_w = np.round(np.sqrt(target_areas *
-                                            aspect_ratios)).astype(np.int32)
+                                            aspect_ratios)).astype(int)
         candidate_crop_h = np.round(np.sqrt(target_areas /
-                                            aspect_ratios)).astype(np.int32)
+                                            aspect_ratios)).astype(int)
 
         for i in range(max_attempts):
             crop_w = candidate_crop_w[i]

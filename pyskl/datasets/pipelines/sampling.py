@@ -153,11 +153,11 @@ class UniformSampleFrames:
                     transitional[i] = transitional[i - 1] = True
                 if num_persons[i] != num_persons[i + 1]:
                     transitional[i] = transitional[i + 1] = True
-            inds_int = inds.astype(np.int)
+            inds_int = inds.astype(int)
             coeff = np.array([transitional[i] for i in inds_int])
             inds = (coeff * inds_int + (1 - coeff) * inds).astype(np.float32)
 
-        results['frame_inds'] = inds.astype(np.int)
+        results['frame_inds'] = inds.astype(int)
         results['clip_len'] = self.clip_len
         results['frame_interval'] = None
         results['num_clips'] = self.num_clips
@@ -354,9 +354,9 @@ class SampleFrames:
             if num_frames > ori_clip_len - 1:
                 base_offsets = np.arange(self.num_clips) * avg_interval
                 clip_offsets = (base_offsets + np.random.uniform(
-                    0, avg_interval, self.num_clips)).astype(np.int)
+                    0, avg_interval, self.num_clips)).astype(int)
             else:
-                clip_offsets = np.zeros((self.num_clips, ), dtype=np.int)
+                clip_offsets = np.zeros((self.num_clips, ), dtype=int)
         else:
             avg_interval = (num_frames - ori_clip_len + 1) // self.num_clips
 
@@ -372,7 +372,7 @@ class SampleFrames:
                 ratio = (num_frames - ori_clip_len + 1.0) / self.num_clips
                 clip_offsets = np.around(np.arange(self.num_clips) * ratio)
             else:
-                clip_offsets = np.zeros((self.num_clips, ), dtype=np.int)
+                clip_offsets = np.zeros((self.num_clips, ), dtype=int)
 
         return clip_offsets
 
@@ -394,11 +394,11 @@ class SampleFrames:
         avg_interval = (num_frames - ori_clip_len + 1) / float(self.num_clips)
         if num_frames > ori_clip_len - 1:
             base_offsets = np.arange(self.num_clips) * avg_interval
-            clip_offsets = (base_offsets + avg_interval / 2.0).astype(np.int)
+            clip_offsets = (base_offsets + avg_interval / 2.0).astype(int)
             if self.twice_sample:
                 clip_offsets = np.concatenate([clip_offsets, base_offsets])
         else:
-            clip_offsets = np.zeros((self.num_clips, ), dtype=np.int)
+            clip_offsets = np.zeros((self.num_clips, ), dtype=int)
         return clip_offsets
 
     def _sample_clips(self, num_frames, test_mode=False):
@@ -450,7 +450,7 @@ class SampleFrames:
 
         start_index = results['start_index']
         frame_inds = np.concatenate(frame_inds) + start_index
-        results['frame_inds'] = frame_inds.astype(np.int)
+        results['frame_inds'] = frame_inds.astype(int)
         results['clip_len'] = self.clip_len
         results['frame_interval'] = self.frame_interval
         results['num_clips'] = self.num_clips
