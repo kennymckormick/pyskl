@@ -124,5 +124,5 @@ if __name__ == '__main__':
         ],
         url='https://github.com/kennymckormick/pyskl',
         license='Apache License 2.0',
-        install_requires=parse_requirements('requirement.txt'),
+        install_requires=parse_requirements('requirements.txt'),
         zip_safe=False)
