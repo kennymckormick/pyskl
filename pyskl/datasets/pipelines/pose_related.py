@@ -37,10 +37,12 @@ class PoseDecode:
         frame_inds = results['frame_inds'] + offset
 
         if 'keypoint_score' in results:
-            results['keypoint_score'] = self._load_kpscore(results['keypoint_score'], frame_inds)
+            results['keypoint_score'] = self._load_kpscore(
+                results['keypoint_score'], frame_inds)
 
         if 'keypoint' in results:
-            results['keypoint'] = self._load_kp(results['keypoint'], frame_inds)
+            results['keypoint'] = self._load_kp(
+                results['keypoint'], frame_inds)
 
         return results
 
@@ -61,10 +63,12 @@ class PreNormalize2D:
         assert mode in ['fix', 'auto']
 
     def __call__(self, results):
-        mask, maskout, keypoint = None, None, results['keypoint'].astype(np.float32)
+        mask, maskout, keypoint = None, None, results['keypoint'].astype(
+            np.float32)
         if 'keypoint_score' in results:
             keypoint_score = results.pop('keypoint_score').astype(np.float32)
-            keypoint = np.concatenate([keypoint, keypoint_score[..., None]], axis=-1)
+            keypoint = np.concatenate(
+                [keypoint, keypoint_score[..., None]], axis=-1)
 
         if keypoint.shape[-1] == 3:
             mask = keypoint[..., 2] > self.threshold
@@ -73,16 +77,22 @@ class PreNormalize2D:
         if self.mode == 'auto':
             if mask is not None:
                 if np.sum(mask):
-                    x_max, x_min = np.max(keypoint[mask, 0]), np.min(keypoint[mask, 0])
-                    y_max, y_min = np.max(keypoint[mask, 1]), np.min(keypoint[mask, 1])
+                    x_max, x_min = np.max(
+                        keypoint[mask, 0]), np.min(keypoint[mask, 0])
+                    y_max, y_min = np.max(
+                        keypoint[mask, 1]), np.min(keypoint[mask, 1])
                 else:
                     x_max, x_min, y_max, y_min = 0, 0, 0, 0
             else:
-                x_max, x_min = np.max(keypoint[..., 0]), np.min(keypoint[..., 0])
-                y_max, y_min = np.max(keypoint[..., 1]), np.min(keypoint[..., 1])
+                x_max, x_min = np.max(
+                    keypoint[..., 0]), np.min(keypoint[..., 0])
+                y_max, y_min = np.max(
+                    keypoint[..., 1]), np.min(keypoint[..., 1])
             if (x_max - x_min) > 10 and (y_max - y_min) > 10:
-                keypoint[..., 0] = (keypoint[..., 0] - (x_max + x_min) / 2) / (x_max - x_min) * 2
-                keypoint[..., 1] = (keypoint[..., 1] - (y_max + y_min) / 2) / (y_max - y_min) * 2
+                keypoint[..., 0] = (keypoint[..., 0] -
+                                    (x_max + x_min) / 2) / (x_max - x_min) * 2
+                keypoint[..., 1] = (keypoint[..., 1] -
+                                    (y_max + y_min) / 2) / (y_max - y_min) * 2
         else:
             h, w = results.get('img_shape', self.img_shape)
             keypoint[..., 0] = (keypoint[..., 0] - (w / 2)) / (w / 2)
@@ -177,7 +187,8 @@ class RandomGaussianNoise:
             # MT
         elif self.base == 'video':
             assert np.sum(flag)
-            ske_min, ske_max = ske_min[flag].min(axis=0), ske_max[flag].max(axis=0)
+            ske_min, ske_max = ske_min[flag].min(
+                axis=0), ske_max[flag].max(axis=0)
             # C
             norm = np.linalg.norm(ske_max - ske_min)
             norm = np.array([norm] * (M * T)) * flag
@@ -248,11 +259,13 @@ class PreNormalize3D:
         if skeleton.sum() == 0:
             return results
 
-        index0 = [i for i in range(T) if not np.all(np.isclose(skeleton[0, i], 0))]
+        index0 = [i for i in range(T) if not np.all(
+            np.isclose(skeleton[0, i], 0))]
 
         assert M in [1, 2]
         if M == 2:
-            index1 = [i for i in range(T) if not np.all(np.isclose(skeleton[1, i], 0))]
+            index1 = [i for i in range(T) if not np.all(
+                np.isclose(skeleton[1, i], 0))]
             if len(index0) < len(index1):
                 skeleton = skeleton[:, np.array(index1)]
                 skeleton = skeleton[[1, 0]]
@@ -282,7 +295,8 @@ class PreNormalize3D:
             joint_rshoulder = skeleton[0, 0, self.xaxis[0]]
             joint_lshoulder = skeleton[0, 0, self.xaxis[1]]
             axis = np.cross(joint_rshoulder - joint_lshoulder, [1, 0, 0])
-            angle = self.angle_between(joint_rshoulder - joint_lshoulder, [1, 0, 0])
+            angle = self.angle_between(
+                joint_rshoulder - joint_lshoulder, [1, 0, 0])
             matrix_x = self.rotation_matrix(axis, angle)
             skeleton = np.einsum('abcd,kd->abck', skeleton, matrix_x)
 
@@ -302,7 +316,8 @@ class JointToBone:
                 f'The dataset type {self.dataset} is not supported')
         if self.dataset == 'nturgb+d':
             self.pairs = ((0, 1), (1, 20), (2, 20), (3, 2), (4, 20), (5, 4), (6, 5), (7, 6), (8, 20), (9, 8),
-                          (10, 9), (11, 10), (12, 0), (13, 12), (14, 13), (15, 14), (16, 0), (17, 16), (18, 17),
+                          (10, 9), (11, 10), (12, 0), (13, 12), (14,
+                                                                 13), (15, 14), (16, 0), (17, 16), (18, 17),
                           (19, 18), (21, 22), (20, 20), (22, 7), (23, 24), (24, 11))
         elif self.dataset == 'openpose':
             self.pairs = ((0, 0), (1, 0), (2, 1), (3, 2), (4, 3), (5, 1), (6, 5), (7, 6), (8, 2), (9, 8), (10, 9),
@@ -312,7 +327,52 @@ class JointToBone:
                           (11, 0), (12, 0), (13, 11), (14, 12), (15, 13), (16, 14))
         elif self.dataset == 'handmp':
             self.pairs = ((0, 0), (1, 0), (2, 1), (3, 2), (4, 3), (5, 0), (6, 5), (7, 6), (8, 7), (9, 0), (10, 9),
-                          (11, 10), (12, 11), (13, 0), (14, 13), (15, 14), (16, 15), (17, 0), (18, 17), (19, 18),
+                          (11, 10), (12, 11), (13, 0), (14, 13), (15,
+                                                                  14), (16, 15), (17, 0), (18, 17), (19, 18),
+                          (20, 19))
+
+    def __call__(self, results):
+
+        keypoint = results['keypoint']
+        M, T, V, C = keypoint.shape
+        bone = np.zeros((M, T, V, C), dtype=np.float32)
+
+        assert C in [2, 3]
+        for v1, v2 in self.pairs:
+            bone[..., v1, :] = keypoint[..., v1, :] - keypoint[..., v2, :]
+            if C == 3 and self.dataset in ['openpose', 'coco', 'handmp']:
+                score = (keypoint[..., v1, 2] + keypoint[..., v2, 2]) / 2
+                bone[..., v1, 2] = score
+
+        results[self.target] = bone
+        return results
+
+
+class JointToBoneD2:
+
+    def __init__(self, dataset='nturgb+d', target='keypoint'):
+        self.dataset = dataset
+        self.target = target
+        if self.dataset not in ['nturgb+d', 'openpose', 'coco', 'handmp']:
+            raise ValueError(
+                f'The dataset type {self.dataset} is not supported')
+        if self.dataset == 'nturgb+d':
+            # self.pairs = ((0, 1), (1, 20), (2, 20), (3, 2), (4, 20), (5, 4), (6, 5), (7, 6), (8, 20), (9, 8),
+            #               (10, 9), (11, 10), (12, 0), (13, 12), (14,13), (15, 14), (16, 0), (17, 16), (18, 17),
+            #               (19, 18), (21, 22), (20, 20), (22, 7), (23, 24), (24, 11))
+            self.pairs = ((0, 20), (1, 2), (3, 20), (5, 20), (4, 6), (5, 7), (6, 21), (6, 22), (9, 20), (8, 10),
+                          (9, 11), (10, 23), (10, 24), (12, 16), (0,13), (12, 14), (13, 15), (0, 17), (16, 18),
+                          (17, 20))
+        elif self.dataset == 'openpose':
+            self.pairs = ((0, 0), (1, 0), (2, 1), (3, 2), (4, 3), (5, 1), (6, 5), (7, 6), (8, 2), (9, 8), (10, 9),
+                          (11, 5), (12, 11), (13, 12), (14, 0), (15, 0), (16, 14), (17, 15))
+        elif self.dataset == 'coco':
+            self.pairs = ((0, 0), (1, 0), (2, 0), (3, 1), (4, 2), (5, 0), (6, 0), (7, 5), (8, 6), (9, 7), (10, 8),
+                          (11, 0), (12, 0), (13, 11), (14, 12), (15, 13), (16, 14))
+        elif self.dataset == 'handmp':
+            self.pairs = ((0, 0), (1, 0), (2, 1), (3, 2), (4, 3), (5, 0), (6, 5), (7, 6), (8, 7), (9, 0), (10, 9),
+                          (11, 10), (12, 11), (13, 0), (14, 13), (15,
+                                                                  14), (16, 15), (17, 0), (18, 17), (19, 18),
                           (20, 19))
 
     def __call__(self, results):
@@ -383,6 +443,8 @@ class GenSkeFeat:
         ops = []
         if 'b' in feats or 'bm' in feats:
             ops.append(JointToBone(dataset=dataset, target='b'))
+        if 'b2' in feats:
+            ops.append(JointToBoneD2(dataset=dataset, target='b2'))
         ops.append(Rename({'keypoint': 'j'}))
         if 'jm' in feats:
             ops.append(ToMotion(dataset=dataset, source='j', target='jm'))
@@ -397,7 +459,8 @@ class GenSkeFeat:
             assert results['keypoint'].shape[-1] == 2, 'Only 2D keypoints have keypoint_score. '
             keypoint = results.pop('keypoint')
             keypoint_score = results.pop('keypoint_score')
-            results['keypoint'] = np.concatenate([keypoint, keypoint_score[..., None]], -1)
+            results['keypoint'] = np.concatenate(
+                [keypoint, keypoint_score[..., None]], -1)
         return self.ops(results)
 
 
@@ -441,12 +504,14 @@ class FormatGCNInput:
         """
         keypoint = results['keypoint']
         if 'keypoint_score' in results:
-            keypoint = np.concatenate((keypoint, results['keypoint_score'][..., None]), axis=-1)
+            keypoint = np.concatenate(
+                (keypoint, results['keypoint_score'][..., None]), axis=-1)
 
         # M T V C
         if keypoint.shape[0] < self.num_person:
             pad_dim = self.num_person - keypoint.shape[0]
-            pad = np.zeros((pad_dim, ) + keypoint.shape[1:], dtype=keypoint.dtype)
+            pad = np.zeros(
+                (pad_dim, ) + keypoint.shape[1:], dtype=keypoint.dtype)
             keypoint = np.concatenate((keypoint, pad), axis=0)
             if self.mode == 'loop' and keypoint.shape[0] == 1:
                 for i in range(1, self.num_person):
@@ -458,12 +523,14 @@ class FormatGCNInput:
         M, T, V, C = keypoint.shape
         nc = results.get('num_clips', 1)
         assert T % nc == 0
-        keypoint = keypoint.reshape((M, nc, T // nc, V, C)).transpose(1, 0, 2, 3, 4)
+        keypoint = keypoint.reshape(
+            (M, nc, T // nc, V, C)).transpose(1, 0, 2, 3, 4)
         results['keypoint'] = np.ascontiguousarray(keypoint)
         return results
 
     def __repr__(self):
-        repr_str = self.__class__.__name__ + f'(num_person={self.num_person}, mode={self.mode})'
+        repr_str = self.__class__.__name__ + \
+            f'(num_person={self.num_person}, mode={self.mode})'
         return repr_str
 
 
@@ -504,7 +571,8 @@ class DecompressPose:
             frame_inds = frame_inds[results['anno_inds']]
             keypoint = keypoint[results['anno_inds']]
 
-        assert np.all(np.diff(frame_inds) >= 0), 'frame_inds should be monotonical increasing'
+        assert np.all(np.diff(frame_inds) >=
+                      0), 'frame_inds should be monotonical increasing'
 
         def mapinds(inds):
             uni = np.unique(inds)
@@ -521,8 +589,10 @@ class DecompressPose:
         num_joints = keypoint.shape[1]
         num_person = get_mode(frame_inds)[-1][0]
 
-        new_kp = np.zeros([num_person, total_frames, num_joints, 2], dtype=np.float16)
-        new_kpscore = np.zeros([num_person, total_frames, num_joints], dtype=np.float16)
+        new_kp = np.zeros(
+            [num_person, total_frames, num_joints, 2], dtype=np.float16)
+        new_kpscore = np.zeros(
+            [num_person, total_frames, num_joints], dtype=np.float16)
         # 32768 is enough
         nperson_per_frame = np.zeros([total_frames], dtype=np.int16)
 
