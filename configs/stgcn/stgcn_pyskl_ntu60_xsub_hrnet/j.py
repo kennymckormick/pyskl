@@ -9,7 +9,7 @@ dataset_type = 'PoseDataset'
 ann_file = 'data/nturgbd/ntu60_hrnet.pkl'
 train_pipeline = [
     dict(type='PreNormalize2D'),
-    dict(type='RandomScale', scale=0.1),
+    dict(type='RandomScale', scale=0.3),
     dict(type='GenSkeFeat', dataset='coco', feats=['j']),
     dict(type='UniformSample', clip_len=100),
     dict(type='PoseDecode'),
