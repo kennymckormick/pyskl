@@ -85,7 +85,7 @@ class unit_gcn(nn.Module):
 
 class unit_agcn(nn.Module):
     def __init__(self, in_channels, out_channels, A, coff_embedding=4, adaptive=True):
-        super(unit_aagcn, self).__init__()
+        super().__init__()
         inter_channels = out_channels // coff_embedding
         self.inter_c = inter_channels
         self.out_c = out_channels
