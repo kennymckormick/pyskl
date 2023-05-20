@@ -1,11 +1,11 @@
-from .gcn import dggcn, unit_aagcn, unit_ctrgcn, unit_gcn, unit_sgn
+from .gcn import dggcn, unit_aagcn, unit_ctrgcn, unit_gcn, unit_sgn, unit_agcn
 from .init_func import bn_init, conv_branch_init, conv_init
 from .msg3d_utils import MSGCN, MSTCN, MW_MSG3DBlock
 from .tcn import dgmstcn, mstcn, unit_tcn
 
 __all__ = [
     # GCN Modules
-    'unit_gcn', 'unit_aagcn', 'unit_ctrgcn', 'unit_sgn', 'dggcn',
+    'unit_gcn', 'unit_agcn', 'unit_aagcn', 'unit_ctrgcn', 'unit_sgn', 'dggcn',
     # TCN Modules
     'unit_tcn', 'mstcn', 'dgmstcn',
     # MSG3D Utils

@@ -83,6 +83,78 @@ class unit_gcn(nn.Module):
     def init_weights(self):
         pass
 
+class unit_agcn(nn.Module):
+    def __init__(self, in_channels, out_channels, A, coff_embedding=4, adaptive=True):
+        super(unit_aagcn, self).__init__()
+        inter_channels = out_channels // coff_embedding
+        self.inter_c = inter_channels
+        self.out_c = out_channels
+        self.in_c = in_channels
+        self.num_subset = A.shape[0]
+        self.adaptive = adaptive
+
+        self.conv_d = nn.ModuleList()
+        for i in range(self.num_subset):
+            self.conv_d.append(nn.Conv2d(in_channels, out_channels, 1))
+
+        if self.adaptive:
+            self.A = nn.Parameter(A)
+            self.alpha = nn.Parameter(torch.zeros(1))
+            self.conv_a = nn.ModuleList()
+            self.conv_b = nn.ModuleList()
+            for i in range(self.num_subset):
+                self.conv_a.append(nn.Conv2d(in_channels, inter_channels, 1))
+                self.conv_b.append(nn.Conv2d(in_channels, inter_channels, 1))
+        else:
+            self.register_buffer('A', A)
+
+        self.down = lambda x: x
+        if in_channels != out_channels:
+            self.down = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, 1),
+                nn.BatchNorm2d(out_channels)
+            )
+
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.tan = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
+        self.relu = nn.ReLU(inplace=True)
+
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                conv_init(m)
+            elif isinstance(m, nn.BatchNorm2d):
+                bn_init(m, 1)
+        bn_init(self.bn, 1e-6)
+        for i in range(self.num_subset):
+            conv_branch_init(self.conv_d[i], self.num_subset)
+
+
+    def forward(self, x):
+        N, C, T, V = x.size()
+
+        y = None
+        if self.adaptive:
+            for i in range(self.num_subset):
+                A1 = self.conv_a[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T)
+                A2 = self.conv_b[i](x).view(N, self.inter_c * T, V)
+                A1 = self.tan(torch.matmul(A1, A2) / A1.size(-1))  # N V V
+                A1 = self.A[i] + A1 * self.alpha
+                A2 = x.view(N, C * T, V)
+                z = self.conv_d[i](torch.matmul(A2, A1).view(N, C, T, V))
+                y = z + y if y is not None else z
+        else:
+            for i in range(self.num_subset):
+                A1 = self.A[i]
+                A2 = x.view(N, C * T, V)
+                z = self.conv_d[i](torch.matmul(A2, A1).view(N, C, T, V))
+                y = z + y if y is not None else z
+
+        y = self.relu(self.bn(y) + self.down(x))
+
+        return y
+
 
 class unit_aagcn(nn.Module):
     def __init__(self, in_channels, out_channels, A, coff_embedding=4, adaptive=True, attention=True):
