@@ -49,7 +49,7 @@ class STGCNBlock(nn.Module):
     def forward(self, x, A=None):
         """Defines the computation performed at every call."""
         res = self.residual(x)
-        x = self.tcn(self.gcn(x, A)) + res
+        x = self.tcn(self.gcn(x)) + res
         return self.relu(x)
 
 
