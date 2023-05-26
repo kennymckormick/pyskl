@@ -2,14 +2,14 @@ model = dict(
     type='RecognizerGCN',
     backbone=dict(
         type='STGCN',
-        graph_cfg=dict(layout='nturgb+d', mode='stgcn_spatial')),
+        graph_cfg=dict(layout='coco', mode='stgcn_spatial')),
     cls_head=dict(type='GCNHead', num_classes=60, in_channels=256))
 
 dataset_type = 'PoseDataset'
 ann_file = 'data/nturgbd/ntu60_hrnet.pkl'
 train_pipeline = [
     dict(type='PreNormalize2D'),
-    dict(type='GenSkeFeat', dataset='nturgb+d', feats=['b2']),
+    dict(type='GenSkeFeat', dataset='coco', feats=['b2']),
     dict(type='UniformSample', clip_len=100),
     dict(type='PoseDecode'),
     dict(type='FormatGCNInput', num_person=2),
@@ -18,7 +18,7 @@ train_pipeline = [
 ]
 val_pipeline = [
     dict(type='PreNormalize2D'),
-    dict(type='GenSkeFeat', dataset='nturgb+d', feats=['b2']),
+    dict(type='GenSkeFeat', dataset='coco', feats=['b2']),
     dict(type='UniformSample', clip_len=100, num_clips=1),
     dict(type='PoseDecode'),
     dict(type='FormatGCNInput', num_person=2),
@@ -27,7 +27,7 @@ val_pipeline = [
 ]
 test_pipeline = [
     dict(type='PreNormalize2D'),
-    dict(type='GenSkeFeat', dataset='nturgb+d', feats=['b2']),
+    dict(type='GenSkeFeat', dataset='coco', feats=['b2']),
     dict(type='UniformSample', clip_len=100, num_clips=10),
     dict(type='PoseDecode'),
     dict(type='FormatGCNInput', num_person=2),
