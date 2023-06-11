@@ -9,6 +9,8 @@ dataset_type = 'PoseDataset'
 ann_file = 'data/nturgbd/ntu60_3danno.pkl'
 train_pipeline = [
     dict(type='PreNormalize3D'),
+    dict(type='RandomScale', scale=0.1),
+    dict(type='RandomRot'),
     dict(type='GenSkeFeat', dataset='nturgb+d', feats=['b']),
     dict(type='UniformSample', clip_len=100),
     dict(type='PoseDecode'),
