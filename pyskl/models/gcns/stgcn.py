@@ -38,7 +38,6 @@ class STGCNBlock(nn.Module):
         elif tcn_type == 'mstcn':
             self.tcn = mstcn(out_channels, out_channels, stride=stride, **tcn_kwargs)
         self.relu = nn.ReLU()
-        self.drop_out = nn.Dropout(0.5)
 
         if not residual:
             self.residual = lambda x: 0
@@ -51,9 +50,7 @@ class STGCNBlock(nn.Module):
         """Defines the computation performed at every call."""
         res = self.residual(x)
         x = self.tcn(self.gcn(x, A)) + res
-        x = self.relu(x)
-        x = self.drop_out(x)
-        return x
+        return self.relu(x)
 
 
 @BACKBONES.register_module()
