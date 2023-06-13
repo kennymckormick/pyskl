@@ -5,7 +5,7 @@ from mmcv.runner import load_checkpoint
 
 from ...utils import Graph, cache_checkpoint
 from ..builder import BACKBONES
-from .utils import mstcn, unit_gcn, unit_tcn
+from .utils import mstcn, unit_agcn, unit_tcn
 
 EPS = 1e-4
 
@@ -28,10 +28,10 @@ class STGCNBlock(nn.Module):
 
         tcn_type = tcn_kwargs.pop('type', 'unit_tcn')
         assert tcn_type in ['unit_tcn', 'mstcn']
-        gcn_type = gcn_kwargs.pop('type', 'unit_gcn')
-        assert gcn_type in ['unit_gcn']
+        gcn_type = gcn_kwargs.pop('type', 'unit_agcn')
+        assert gcn_type in ['unit_agcn']
 
-        self.gcn = unit_gcn(in_channels, out_channels, A, **gcn_kwargs)
+        self.gcn = unit_agcn(in_channels, out_channels, A, **gcn_kwargs)
 
         if tcn_type == 'unit_tcn':
             self.tcn = unit_tcn(out_channels, out_channels, 9, stride=stride, **tcn_kwargs)
@@ -49,7 +49,7 @@ class STGCNBlock(nn.Module):
     def forward(self, x, A=None):
         """Defines the computation performed at every call."""
         res = self.residual(x)
-        x = self.tcn(self.gcn(x, A)) + res
+        x = self.tcn(self.gcn(x)) + res
         return self.relu(x)
 
 
