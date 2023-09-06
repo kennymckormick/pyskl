@@ -295,25 +295,28 @@ class PreNormalize3D:
         return results
 
 
-@PIPELINES.register_module()
 class JointToBone:
 
     def __init__(self, dataset='nturgb+d', target='keypoint'):
         self.dataset = dataset
         self.target = target
-        if self.dataset not in ['nturgb+d', 'openpose', 'coco']:
+        if self.dataset not in ['nturgb+d', 'openpose', 'coco', 'handmp']:
             raise ValueError(
                 f'The dataset type {self.dataset} is not supported')
         if self.dataset == 'nturgb+d':
-            self.pairs = [(0, 1), (1, 20), (2, 20), (3, 2), (4, 20), (5, 4), (6, 5), (7, 6), (8, 20), (9, 8),
+            self.pairs = ((0, 1), (1, 20), (2, 20), (3, 2), (4, 20), (5, 4), (6, 5), (7, 6), (8, 20), (9, 8),
                           (10, 9), (11, 10), (12, 0), (13, 12), (14, 13), (15, 14), (16, 0), (17, 16), (18, 17),
-                          (19, 18), (21, 22), (20, 20), (22, 7), (23, 24), (24, 11)]
+                          (19, 18), (21, 22), (20, 20), (22, 7), (23, 24), (24, 11))
         elif self.dataset == 'openpose':
             self.pairs = ((0, 0), (1, 0), (2, 1), (3, 2), (4, 3), (5, 1), (6, 5), (7, 6), (8, 2), (9, 8), (10, 9),
                           (11, 5), (12, 11), (13, 12), (14, 0), (15, 0), (16, 14), (17, 15))
         elif self.dataset == 'coco':
             self.pairs = ((0, 0), (1, 0), (2, 0), (3, 1), (4, 2), (5, 0), (6, 0), (7, 5), (8, 6), (9, 7), (10, 8),
                           (11, 0), (12, 0), (13, 11), (14, 12), (15, 13), (16, 14))
+        elif self.dataset == 'handmp':
+            self.pairs = ((0, 0), (1, 0), (2, 1), (3, 2), (4, 3), (5, 0), (6, 5), (7, 6), (8, 7), (9, 0), (10, 9),
+                          (11, 10), (12, 11), (13, 0), (14, 13), (15, 14), (16, 15), (17, 0), (18, 17), (19, 18),
+                          (20, 19))
 
     def __call__(self, results):
 
@@ -324,7 +327,7 @@ class JointToBone:
         assert C in [2, 3]
         for v1, v2 in self.pairs:
             bone[..., v1, :] = keypoint[..., v1, :] - keypoint[..., v2, :]
-            if C == 3 and self.dataset in ['openpose', 'coco']:
+            if C == 3 and self.dataset in ['openpose', 'coco', 'handmp']:
                 score = (keypoint[..., v1, 2] + keypoint[..., v2, 2]) / 2
                 bone[..., v1, 2] = score
 

@@ -35,6 +35,7 @@ We provide links to the pre-processed skeleton annotations, you can directly dow
 - NTURGB+D 120 [2D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/nturgbd/ntu120_hrnet.pkl
 - NTURGB+D 120 [3D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/nturgbd/ntu120_3danno.pkl
 - GYM [2D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/gym/gym_hrnet.pkl
+   - GYM 2D skeletons are extracted with ground-truth human bounding boxes, which can be downloaded with link: https://download.openmmlab.com/mmaction/pyskl/data/gym/gym_gt_bboxes.pkl. Please cite [PoseConv3D](https://arxiv.org/abs/2104.13586) if you use it in your project.
 - UCF101 [2D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/ucf101/ucf101_hrnet.pkl
 - HMDB51 [2D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/hmdb51/hmdb51_hrnet.pkl
 - Diving48 [2D Skeleton]: https://download.openmmlab.com/mmaction/pyskl/data/diving48/diving48_hrnet.pkl
