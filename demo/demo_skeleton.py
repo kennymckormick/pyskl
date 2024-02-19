@@ -213,6 +213,8 @@ def pose_tracking(pose_results, max_tracks=2, thre=30):
                     new_track['track_id'] = num_tracks
                     new_track['data'] = [(idx, poses[j])]
                     tracks.append(new_track)
+    if num_joints is None:
+        return None, None
     tracks.sort(key=lambda x: -len(x['data']))
     result = np.zeros((max_tracks, len(pose_results), num_joints, 3), dtype=np.float16)
     for i, track in enumerate(tracks[:max_tracks]):
@@ -284,9 +286,11 @@ def main():
         fake_anno['keypoint'] = keypoint
         fake_anno['keypoint_score'] = keypoint_score
 
-    results = inference_recognizer(model, fake_anno)
-
-    action_label = label_map[results[0][0]]
+    if fake_anno['keypoint'] is None:
+        action_label = ''
+    else:
+        results = inference_recognizer(model, fake_anno)
+        action_label = label_map[results[0][0]]
 
     pose_model = init_pose_model(args.pose_config, args.pose_checkpoint,
                                  args.device)
