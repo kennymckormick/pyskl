@@ -213,7 +213,7 @@ def pose_tracking(pose_results, max_tracks=2, thre=30):
                     new_track['track_id'] = num_tracks
                     new_track['data'] = [(idx, poses[j])]
                     tracks.append(new_track)
-    if num_joints is None: 
+    if num_joints is None:
         return None, None
     tracks.sort(key=lambda x: -len(x['data']))
     result = np.zeros((max_tracks, len(pose_results), num_joints, 3), dtype=np.float16)
