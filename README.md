@@ -54,6 +54,15 @@ conda activate pyskl
 pip install -e .
 ```
 
+## Installation Python 3.10
+```shell
+git clone https://github.com/kennymckormick/pyskl.git
+cd pyskl
+conda env create -f pyskl_310.yaml
+conda activate pyskl
+pip install -e .
+```
+
 ## Demo
 
 Check [demo.md](/demo/demo.md).
