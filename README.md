@@ -61,7 +61,7 @@ pip install -e .
 git clone https://github.com/kennymckormick/pyskl.git
 cd pyskl
 conda env create -f pyskl_310.yaml
-conda activate pyskl
+conda activate pyskl_310
 pip install -e .
 ```
 
